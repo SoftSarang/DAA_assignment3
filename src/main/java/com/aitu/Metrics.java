@@ -66,13 +66,15 @@ public class Metrics {
                 ", timeMs=" + executionTimeMs + "}";
     }
 
-    public static void CsvWriter(String filePath, String[][] data) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            writer.write("graph_id,vertices,edges,algorithm,total_cost,operations_count,execution_time_ms\n");
-
+    public static void writeCsv(String filePath, String[][] data, boolean append) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, append))) {
+            if (!append) {
+                writer.write("graph_id,vertices,edges,algorithm,total_cost,operations_count,execution_time_ms\n");
+            }
             for (String[] row : data) {
                 writer.write(String.join(",", row) + "\n");
             }
         }
     }
+
 }
