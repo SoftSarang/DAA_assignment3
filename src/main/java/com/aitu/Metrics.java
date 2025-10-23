@@ -17,7 +17,7 @@ public class Metrics {
 
     public void stopTimer() {
         long endTime = System.nanoTime();
-        executionTimeMs = (endTime - startTime) / 1_000_000.0; // Convert to ms
+        executionTimeMs = (endTime - startTime) / 1_000_000.0;
     }
 
     public void incrementComparison() {
@@ -68,10 +68,8 @@ public class Metrics {
 
     public static void CsvWriter(String filePath, String[][] data) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            // Write header
             writer.write("graph_id,vertices,edges,algorithm,total_cost,operations_count,execution_time_ms\n");
 
-            // Write data rows
             for (String[] row : data) {
                 writer.write(String.join(",", row) + "\n");
             }
