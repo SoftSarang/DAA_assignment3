@@ -36,11 +36,11 @@ public class PrimMSTTest {
         PrimMST mst = new PrimMST(G, tracker);
 
         assertEquals(6.0, mst.weight(), 0.001);
-        int count = 0;
+        int edgeCount = 0;
         for (Edge e : mst.edges()) {
-            count++;
+            edgeCount++;
         }
-        assertEquals(3, count);
+        assertEquals(3, edgeCount);
 
         assertEquals(4, mst.getVertices());
         assertEquals(4, mst.getEdgesCount());
@@ -102,31 +102,4 @@ public class PrimMSTTest {
         assertEquals(4, mst2.getEdgesCount());
     }
 
-    @Test
-    void testSelfLoop() {
-        EdgeWeightedGraph G = new EdgeWeightedGraph(2);
-        G.addEdge(new Edge(0, 0, 1));
-        G.addEdge(new Edge(0, 1, 2));
-
-        Metrics tracker = new Metrics();
-        PrimMST mst = new PrimMST(G, tracker);
-        assertEquals(2.0, mst.weight(), 0.001);
-        int count = 0;
-        for (Edge e : mst.edges()) {
-            count++;
-        }
-        assertEquals(1, count);
-
-        assertEquals(2, mst.getVertices());
-        assertEquals(2, mst.getEdgesCount());
-    }
-
-    @Test
-    void testNegativeWeight() {
-        EdgeWeightedGraph G = new EdgeWeightedGraph(2);
-        G.addEdge(new Edge(0, 1, -1));
-
-        Metrics tracker = new Metrics();
-        assertThrows(IllegalArgumentException.class, () -> new PrimMST(G, tracker));
-    }
 }

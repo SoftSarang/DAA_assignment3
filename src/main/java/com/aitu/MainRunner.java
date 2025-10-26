@@ -12,6 +12,14 @@ import java.util.Map;
 public class MainRunner {
     public static void main(String[] args) {
         try {
+            warmupJVM();
+            System.gc();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
             JSONObject input = readInputJson();
             JSONArray graphs = input.getJSONArray("graphs");
             JSONArray results = new JSONArray();
@@ -31,18 +39,26 @@ public class MainRunner {
                 int vertexCount = graph.V();
                 int edgeCount = graph.E();
 
+                System.gc();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 Metrics primMetrics = new Metrics();
-                primMetrics.startTimer();
                 PrimMST primMST = new PrimMST(graph, primMetrics);
-                primMetrics.stopTimer();
                 double primWeight = primMST.weight();
                 JSONArray primMstEdges = getMstEdges(primMST.edges(), nodeMap);
                 JSONObject primResult = createAlgorithmResult("prim", primWeight, primMstEdges, primMetrics);
 
+                System.gc();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 Metrics kruskalMetrics = new Metrics();
-                kruskalMetrics.startTimer();
                 KruskalMST kruskalMST = new KruskalMST(graph, kruskalMetrics);
-                kruskalMetrics.stopTimer();
                 double kruskalWeight = kruskalMST.weight();
                 JSONArray kruskalMstEdges = getMstEdges(kruskalMST.edges(), nodeMap);
                 JSONObject kruskalResult = createAlgorithmResult("kruskal", kruskalWeight, kruskalMstEdges, kruskalMetrics);
@@ -63,6 +79,13 @@ public class MainRunner {
                                 String.valueOf(kruskalMetrics.getTotalOperations()), String.format("%.2f", kruskalMetrics.getExecutionTimeMs())}
                 };
                 Metrics.writeCsv(csvFilePath, csvData, true);
+
+                System.gc();
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
 
             writeOutputJson(results);
@@ -86,6 +109,9 @@ public class MainRunner {
 
     private static EdgeWeightedGraph parseGraph(JSONObject graphJson, Map<String, Integer> nodeMap) {
         int vertexCount = nodeMap.size();
+        if (vertexCount == 0) {
+            throw new IllegalArgumentException("Graph has no vertices");
+        }
         EdgeWeightedGraph graph = new EdgeWeightedGraph(vertexCount);
         JSONArray edges = graphJson.getJSONArray("edges");
         for (int i = 0; i < edges.length(); i++) {
@@ -93,11 +119,37 @@ public class MainRunner {
             int source = nodeMap.get(edge.getString("from"));
             int target = nodeMap.get(edge.getString("to"));
             double weight = edge.getDouble("weight");
+
+            if (weight < 0) {
+                throw new IllegalArgumentException(
+                        String.format("Negative edge weight detected: %.2f (from %s to %s)",
+                                weight, edge.getString("from"), edge.getString("to"))
+                );
+            }
+
+            if (source == target) {
+                throw new IllegalArgumentException(
+                        String.format("Self-loop detected: %s -> %s",
+                                edge.getString("from"), edge.getString("to"))
+                );
+            }
             graph.addEdge(new Edge(source, target, weight));
         }
         return graph;
     }
 
+    private static void warmupJVM() {
+        EdgeWeightedGraph warmupGraph = new EdgeWeightedGraph(20);
+        for (int i = 0; i < 19; i++) {
+            warmupGraph.addEdge(new Edge(i, i + 1, Math.random() * 10));
+        }
+
+        for (int i = 0; i < 10; i++) {
+            Metrics dummyMetrics = new Metrics();
+            new PrimMST(warmupGraph, dummyMetrics);
+            new KruskalMST(warmupGraph, dummyMetrics);
+        }
+    }
     private static JSONArray getMstEdges(Iterable<Edge> edges, Map<String, Integer> nodeMap) {
         JSONArray mstEdges = new JSONArray();
         for (Edge edge : edges) {

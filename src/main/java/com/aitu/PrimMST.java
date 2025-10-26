@@ -58,11 +58,8 @@ public class PrimMST {
     private void updateMinEdge(EdgeWeightedGraph graph, int v) {
         for (Edge e : graph.adj(v)) {
             int w = e.other(v);
-            tracker.incrementComparison();
 
-            if (e.weight() < 0) {
-                throw new IllegalArgumentException("Negative edge weight detected: " + e.weight());
-            }
+            tracker.incrementComparison();
             if (!marked[w] && e.weight() < distTo[w]) {
                 distTo[w] = e.weight();
                 edgeTo[w] = e;
