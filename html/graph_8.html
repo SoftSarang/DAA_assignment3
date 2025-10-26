@@ -15,7 +15,6 @@ h1{color:#333;margin:0 0 10px 0}
 button{background:#2196F3;color:white;border:none;padding:8px 15px;margin:3px;border-radius:5px;cursor:pointer;font-size:13px;width:100%}
 button:hover{background:#1976D2}
 button.reset{background:#FF5722}
-button.mst{background:#4CAF50}
 .vertex-list{margin-top:15px}
 .vertex-item{background:white;padding:10px;margin:5px 0;border-radius:5px;cursor:pointer;border:2px solid transparent;font-size:13px}
 .vertex-item:hover{border-color:#2196F3;background:#e3f2fd}
@@ -26,11 +25,9 @@ button.mst{background:#4CAF50}
 #graph{border:1px solid #ddd;background:white;border-radius:5px}
 .links line{stroke:#999;stroke-opacity:0.6;stroke-width:1.5px}
 .links line.hidden{display:none}
-.links line.mst{stroke:#4CAF50;stroke-width:2.5px;stroke-opacity:0.9}
-.links line.filtered{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
+.links line.highlighted{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
 .nodes circle{stroke:#fff;stroke-width:2px;fill:#2196F3;cursor:pointer}
 .nodes circle.hidden{display:none}
-.nodes circle.inactive{fill:#999;opacity:0.5}
 .nodes circle.highlighted{fill:#4CAF50;r:18;stroke-width:3px}
 .nodes circle.neighbor{fill:#FF9800}
 .nodes text{font-size:11px;font-weight:bold;fill:white;pointer-events:none}
@@ -39,9 +36,6 @@ button.mst{background:#4CAF50}
 .weight-label.hidden{display:none}
 .stats{margin-top:15px;padding:10px;background:#fff3e0;border-radius:5px;font-size:12px}
 .stats div{margin:5px 0}
-.legend{margin-top:10px;padding:10px;background:#e8f5e9;border-radius:5px;font-size:12px}
-.legend-item{margin:5px 0}
-.legend-color{display:inline-block;width:15px;height:15px;border-radius:2px;margin-right:8px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -54,21 +48,13 @@ Vertices: 90<br>Edges: 270<br>Avg Degree: 6,0
 </div>
 <div class='controls'>
 <button class='reset' onclick='reset()'>Show All</button>
-<button class='mst' onclick='showMST()'>Highlight MST</button>
 <button onclick='toggleWeights()'>Toggle Weights</button>
 </div>
 <input type='text' class='search-box' id='search' placeholder='Search...' onkeyup='search()'>
 <div class='vertex-list' id='list'></div>
 <div class='stats' id='stats'>
 <div>Showing: <strong id='count'>90</strong> vertices</div>
-<div>Connected edges: <strong id='neighbors'>0</strong></div>
-</div>
-<div class='legend'>
-<div class='legend-item'><span class='legend-color' style='background:#999;'></span>Inactive</div>
-<div class='legend-item'><span class='legend-color' style='background:#FF9800;'></span>Neighbor</div>
-<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>Selected</div>
-<div class='legend-item'><span class='legend-color' style='background:#FF5722;'></span>Selected edge</div>
-<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>MST edge</div>
+<div>Selected neighbors: <strong id='neighbors'>0</strong></div>
 </div>
 </div>
 <div><svg id='graph' width='1100' height='700'></svg></div>
@@ -76,7 +62,6 @@ Vertices: 90<br>Edges: 270<br>Avg Degree: 6,0
 <script>
 const data=[{"id":"V1"},{"id":"V2"},{"id":"V3"},{"id":"V4"},{"id":"V5"},{"id":"V6"},{"id":"V7"},{"id":"V8"},{"id":"V9"},{"id":"V10"},{"id":"V11"},{"id":"V12"},{"id":"V13"},{"id":"V14"},{"id":"V15"},{"id":"V16"},{"id":"V17"},{"id":"V18"},{"id":"V19"},{"id":"V20"},{"id":"V21"},{"id":"V22"},{"id":"V23"},{"id":"V24"},{"id":"V25"},{"id":"V26"},{"id":"V27"},{"id":"V28"},{"id":"V29"},{"id":"V30"},{"id":"V31"},{"id":"V32"},{"id":"V33"},{"id":"V34"},{"id":"V35"},{"id":"V36"},{"id":"V37"},{"id":"V38"},{"id":"V39"},{"id":"V40"},{"id":"V41"},{"id":"V42"},{"id":"V43"},{"id":"V44"},{"id":"V45"},{"id":"V46"},{"id":"V47"},{"id":"V48"},{"id":"V49"},{"id":"V50"},{"id":"V51"},{"id":"V52"},{"id":"V53"},{"id":"V54"},{"id":"V55"},{"id":"V56"},{"id":"V57"},{"id":"V58"},{"id":"V59"},{"id":"V60"},{"id":"V61"},{"id":"V62"},{"id":"V63"},{"id":"V64"},{"id":"V65"},{"id":"V66"},{"id":"V67"},{"id":"V68"},{"id":"V69"},{"id":"V70"},{"id":"V71"},{"id":"V72"},{"id":"V73"},{"id":"V74"},{"id":"V75"},{"id":"V76"},{"id":"V77"},{"id":"V78"},{"id":"V79"},{"id":"V80"},{"id":"V81"},{"id":"V82"},{"id":"V83"},{"id":"V84"},{"id":"V85"},{"id":"V86"},{"id":"V87"},{"id":"V88"},{"id":"V89"},{"id":"V90"}];
 const links=[{"source":"V1","target":"V2","weight":6.486993156124297},{"source":"V2","target":"V3","weight":5.548971030174213},{"source":"V2","target":"V4","weight":2.874620890271741},{"source":"V3","target":"V5","weight":9.406710682230383},{"source":"V3","target":"V6","weight":9.236024911219198},{"source":"V5","target":"V7","weight":2.8367552654235095},{"source":"V2","target":"V8","weight":2.717159411920802},{"source":"V2","target":"V9","weight":6.564736336505668},{"source":"V3","target":"V10","weight":2.406982668567308},{"source":"V4","target":"V11","weight":6.848975148452132},{"source":"V3","target":"V12","weight":6.8479928432926584},{"source":"V2","target":"V13","weight":3.160147412408082},{"source":"V11","target":"V14","weight":7.594366578073153},{"source":"V4","target":"V15","weight":1.303971197515058},{"source":"V2","target":"V16","weight":2.147067706720592},{"source":"V16","target":"V17","weight":5.683987675057773},{"source":"V14","target":"V18","weight":0.6559078690649012},{"source":"V14","target":"V19","weight":6.1233141029930485},{"source":"V17","target":"V20","weight":0.7740183599668937},{"source":"V9","target":"V21","weight":8.396734637118259},{"source":"V5","target":"V22","weight":1.2686541023923115},{"source":"V20","target":"V23","weight":1.6256170001534964},{"source":"V9","target":"V24","weight":1.2802413016031133},{"source":"V19","target":"V25","weight":2.4059001327169627},{"source":"V15","target":"V26","weight":7.510227270184512},{"source":"V14","target":"V27","weight":6.060592884486341},{"source":"V8","target":"V28","weight":1.1905638863284962},{"source":"V4","target":"V29","weight":4.566551007441365},{"source":"V27","target":"V30","weight":6.757235943194186},{"source":"V19","target":"V31","weight":7.575094931743279},{"source":"V31","target":"V32","weight":7.25968088586291},{"source":"V1","target":"V33","weight":3.635850508487076},{"source":"V19","target":"V34","weight":2.7214485642988273},{"source":"V34","target":"V35","weight":3.0807802808413234},{"source":"V28","target":"V36","weight":1.861228548911955},{"source":"V16","target":"V37","weight":4.982986052388051},{"source":"V6","target":"V38","weight":9.003618942738813},{"source":"V25","target":"V39","weight":4.791725191839475},{"source":"V35","target":"V40","weight":5.755579142007214},{"source":"V33","target":"V41","weight":9.3307058864021},{"source":"V26","target":"V42","weight":7.105455987024495},{"source":"V30","target":"V43","weight":0.11703843163986649},{"source":"V31","target":"V44","weight":4.0112548534127175},{"source":"V16","target":"V45","weight":7.603220131370989},{"source":"V28","target":"V46","weight":4.966655142899301},{"source":"V24","target":"V47","weight":7.294309556372255},{"source":"V5","target":"V48","weight":8.173109301276803},{"source":"V23","target":"V49","weight":6.815382270083182},{"source":"V37","target":"V50","weight":5.444309888129735},{"source":"V20","target":"V51","weight":0.7693290992417356},{"source":"V2","target":"V52","weight":1.2706693012945824},{"source":"V25","target":"V53","weight":9.116439522731763},{"source":"V53","target":"V54","weight":0.9783888696463072},{"source":"V7","target":"V55","weight":0.46946588361644004},{"source":"V20","target":"V56","weight":5.17862215880022},{"source":"V55","target":"V57","weight":2.373656713414858},{"source":"V40","target":"V58","weight":5.334978902318042},{"source":"V42","target":"V59","weight":4.354634848766427},{"source":"V32","target":"V60","weight":1.7584331484128346},{"source":"V5","target":"V61","weight":0.04089496729737907},{"source":"V48","target":"V62","weight":8.728126722238041},{"source":"V18","target":"V63","weight":6.0019580006769715},{"source":"V56","target":"V64","weight":9.549314126008051},{"source":"V28","target":"V65","weight":6.21766773987765},{"source":"V41","target":"V66","weight":2.82453991960397},{"source":"V16","target":"V67","weight":8.497777992186254},{"source":"V29","target":"V68","weight":8.30583067228413},{"source":"V30","target":"V69","weight":8.696931084337582},{"source":"V9","target":"V70","weight":4.760120637463142},{"source":"V16","target":"V71","weight":3.0521366764238334},{"source":"V31","target":"V72","weight":1.0096391418762707},{"source":"V66","target":"V73","weight":5.07529883080778},{"source":"V65","target":"V74","weight":8.06396790896337},{"source":"V23","target":"V75","weight":8.963460898564984},{"source":"V44","target":"V76","weight":1.069278858897641},{"source":"V11","target":"V77","weight":0.5266287006858705},{"source":"V69","target":"V78","weight":5.608581039204081},{"source":"V54","target":"V79","weight":9.760995635336675},{"source":"V74","target":"V80","weight":5.063433738905973},{"source":"V60","target":"V81","weight":8.20690861212259},{"source":"V12","target":"V82","weight":8.792706747241892},{"source":"V71","target":"V83","weight":5.4242886991108215},{"source":"V12","target":"V84","weight":4.722194805870213},{"source":"V45","target":"V85","weight":6.271718540661448},{"source":"V55","target":"V86","weight":5.117569339149944},{"source":"V58","target":"V87","weight":9.876239616213992},{"source":"V64","target":"V88","weight":6.863932298431439},{"source":"V42","target":"V89","weight":7.672634327702836},{"source":"V72","target":"V90","weight":6.2337939463110175},{"source":"V35","target":"V70","weight":2.678564302441327},{"source":"V46","target":"V90","weight":4.351446691154597},{"source":"V84","target":"V13","weight":2.8941749598662776},{"source":"V53","target":"V60","weight":2.0964879331136013},{"source":"V86","target":"V51","weight":1.9815663532448857},{"source":"V39","target":"V21","weight":7.240953829712605},{"source":"V65","target":"V5","weight":3.340634621635849},{"source":"V78","target":"V7","weight":4.06851384486881},{"source":"V62","target":"V24","weight":5.7933409830127705},{"source":"V90","target":"V53","weight":4.470371545512567},{"source":"V75","target":"V48","weight":5.253694291603405},{"source":"V38","target":"V83","weight":5.706243540063593},{"source":"V62","target":"V33","weight":6.986260015010645},{"source":"V21","target":"V90","weight":4.936683414970661},{"source":"V50","target":"V35","weight":8.818096905682056},{"source":"V1","target":"V47","weight":4.757612161204138},{"source":"V25","target":"V89","weight":9.666280108288529},{"source":"V8","target":"V42","weight":1.2916114637411822},{"source":"V21","target":"V68","weight":2.074088704161369},{"source":"V39","target":"V13","weight":5.355557167815063},{"source":"V62","target":"V47","weight":8.0102026508658},{"source":"V18","target":"V44","weight":9.117695539078843},{"source":"V60","target":"V3","weight":2.9972378797221104},{"source":"V42","target":"V11","weight":1.9864429799519678},{"source":"V89","target":"V90","weight":8.233832182199894},{"source":"V52","target":"V37","weight":4.26434771980858},{"source":"V56","target":"V87","weight":8.287934324873829},{"source":"V8","target":"V51","weight":5.844307061900354},{"source":"V74","target":"V59","weight":7.933012129220126},{"source":"V48","target":"V44","weight":9.86543006944083},{"source":"V51","target":"V57","weight":1.6212275821056024},{"source":"V4","target":"V68","weight":8.000817190440218},{"source":"V81","target":"V46","weight":4.670637165714427},{"source":"V33","target":"V90","weight":3.7106617527237375},{"source":"V42","target":"V39","weight":6.232730760654844},{"source":"V51","target":"V13","weight":9.361459752000025},{"source":"V13","target":"V54","weight":1.5021326072631096},{"source":"V74","target":"V38","weight":1.5857496736183907},{"source":"V83","target":"V89","weight":1.4320449951578729},{"source":"V28","target":"V78","weight":9.6366833085915},{"source":"V69","target":"V6","weight":2.427020126337018},{"source":"V39","target":"V1","weight":5.77786438705595},{"source":"V37","target":"V23","weight":2.0989115077061578},{"source":"V52","target":"V81","weight":8.941275506307772},{"source":"V28","target":"V7","weight":9.192351490706669},{"source":"V17","target":"V32","weight":3.984739509133502},{"source":"V60","target":"V73","weight":3.212872859108269},{"source":"V22","target":"V77","weight":5.885257066333978},{"source":"V26","target":"V13","weight":6.123790318400775},{"source":"V19","target":"V85","weight":8.115679455345147},{"source":"V72","target":"V22","weight":6.717220583040231},{"source":"V11","target":"V9","weight":5.269573279185823},{"source":"V43","target":"V22","weight":2.910124826410104},{"source":"V35","target":"V27","weight":7.722754737333541},{"source":"V3","target":"V74","weight":8.268017695572532},{"source":"V52","target":"V45","weight":5.749863054087765},{"source":"V47","target":"V14","weight":9.516992303982505},{"source":"V9","target":"V61","weight":3.050466764383719},{"source":"V40","target":"V78","weight":3.6689705244922286},{"source":"V53","target":"V3","weight":3.0815890958018874},{"source":"V61","target":"V53","weight":8.655594867888558},{"source":"V4","target":"V6","weight":5.9421621177518675},{"source":"V53","target":"V50","weight":5.042934662871011},{"source":"V25","target":"V45","weight":1.8098082549908163},{"source":"V38","target":"V54","weight":2.4821906503202036},{"source":"V79","target":"V67","weight":7.091479786321094},{"source":"V61","target":"V54","weight":5.040835325102304},{"source":"V3","target":"V25","weight":3.5168648868182135},{"source":"V5","target":"V23","weight":5.454139239194305},{"source":"V57","target":"V13","weight":9.377110862290266},{"source":"V62","target":"V61","weight":9.638784428814871},{"source":"V47","target":"V44","weight":4.991287001477686},{"source":"V22","target":"V48","weight":1.518283979253321},{"source":"V84","target":"V14","weight":4.269152106675971},{"source":"V19","target":"V20","weight":1.3241724680636078},{"source":"V70","target":"V44","weight":5.931167974298449},{"source":"V9","target":"V62","weight":3.0574514960052284},{"source":"V56","target":"V1","weight":4.545335900818844},{"source":"V89","target":"V76","weight":2.7215217256841897},{"source":"V20","target":"V7","weight":2.321135178530964},{"source":"V74","target":"V14","weight":1.7040981455821032},{"source":"V71","target":"V88","weight":8.116129031536637},{"source":"V43","target":"V89","weight":8.554062949081224},{"source":"V45","target":"V65","weight":9.970908483859294},{"source":"V33","target":"V2","weight":2.110126677522987},{"source":"V35","target":"V53","weight":9.998896543342214},{"source":"V5","target":"V73","weight":7.635805679970788},{"source":"V24","target":"V76","weight":6.7607465205230275},{"source":"V16","target":"V68","weight":4.603215141262721},{"source":"V58","target":"V70","weight":3.2136263618666687},{"source":"V45","target":"V44","weight":9.88777166260718},{"source":"V43","target":"V84","weight":7.497325029401344},{"source":"V9","target":"V45","weight":5.392687795114437},{"source":"V69","target":"V13","weight":3.304887917221399},{"source":"V22","target":"V16","weight":9.150285430346184},{"source":"V11","target":"V18","weight":1.3481909337354088},{"source":"V7","target":"V17","weight":6.662975182872537},{"source":"V18","target":"V88","weight":3.3478027471225955},{"source":"V11","target":"V35","weight":5.618822923544485},{"source":"V87","target":"V57","weight":5.051683650219578},{"source":"V2","target":"V46","weight":1.144938088901413},{"source":"V13","target":"V40","weight":9.01871306606357},{"source":"V55","target":"V4","weight":3.4464950393875613},{"source":"V69","target":"V18","weight":5.2907336649738035},{"source":"V43","target":"V87","weight":9.02001710917622},{"source":"V54","target":"V4","weight":9.06598995206245},{"source":"V41","target":"V22","weight":9.920064581049349},{"source":"V66","target":"V21","weight":2.874421882284322},{"source":"V69","target":"V73","weight":5.962798145306543},{"source":"V2","target":"V83","weight":1.0577820264511277},{"source":"V50","target":"V75","weight":3.031079326156318},{"source":"V63","target":"V25","weight":7.439231522201523},{"source":"V56","target":"V67","weight":8.105977032625535},{"source":"V11","target":"V33","weight":2.604476834220658},{"source":"V29","target":"V49","weight":8.55427197773589},{"source":"V38","target":"V72","weight":3.2345861129760074},{"source":"V77","target":"V51","weight":7.751081033443673},{"source":"V30","target":"V82","weight":6.6791666094477415},{"source":"V53","target":"V85","weight":6.123340739281045},{"source":"V3","target":"V62","weight":4.686805346009251},{"source":"V34","target":"V14","weight":6.224895177595551},{"source":"V54","target":"V12","weight":5.073927776693174},{"source":"V20","target":"V83","weight":9.896321943752964},{"source":"V18","target":"V1","weight":8.383744716062587},{"source":"V17","target":"V73","weight":5.911256992884287},{"source":"V26","target":"V48","weight":4.26370968681648},{"source":"V51","target":"V75","weight":9.7658690097125},{"source":"V67","target":"V36","weight":9.37291795332317},{"source":"V39","target":"V32","weight":7.429259400266869},{"source":"V2","target":"V21","weight":1.1201385683041778},{"source":"V41","target":"V58","weight":8.939952670635263},{"source":"V15","target":"V18","weight":2.4286757279135447},{"source":"V27","target":"V58","weight":3.7072698325471145},{"source":"V47","target":"V74","weight":3.026015664757914},{"source":"V23","target":"V53","weight":9.197316710869885},{"source":"V44","target":"V61","weight":8.131462584373757},{"source":"V60","target":"V66","weight":1.798192234482908},{"source":"V30","target":"V88","weight":2.843614565056641},{"source":"V50","target":"V39","weight":1.5142398580630034},{"source":"V21","target":"V87","weight":8.674198563360875},{"source":"V68","target":"V3","weight":8.221312030216918},{"source":"V59","target":"V84","weight":1.993569208293388},{"source":"V56","target":"V70","weight":4.963936822649579},{"source":"V47","target":"V11","weight":6.489384456816482},{"source":"V34","target":"V4","weight":5.238069746636446},{"source":"V26","target":"V14","weight":1.3556715636121668},{"source":"V60","target":"V47","weight":7.950242887555296},{"source":"V8","target":"V80","weight":5.048340363735958},{"source":"V9","target":"V58","weight":2.1053208327652637},{"source":"V31","target":"V34","weight":6.8194649527079445},{"source":"V4","target":"V44","weight":4.110990527535953},{"source":"V83","target":"V82","weight":6.46920694622707},{"source":"V38","target":"V25","weight":7.558270611398218},{"source":"V84","target":"V29","weight":1.6966343058120015},{"source":"V78","target":"V32","weight":4.279327029337181},{"source":"V69","target":"V70","weight":1.2886568865894312},{"source":"V26","target":"V27","weight":8.090001016783965},{"source":"V81","target":"V69","weight":2.046028526766457},{"source":"V37","target":"V63","weight":5.112126470832063},{"source":"V78","target":"V27","weight":5.967927799428003},{"source":"V44","target":"V71","weight":3.082890265533031},{"source":"V60","target":"V7","weight":2.2978958491845414},{"source":"V82","target":"V52","weight":9.042921310626921},{"source":"V31","target":"V10","weight":8.813560529130521},{"source":"V19","target":"V79","weight":1.3127855059169151},{"source":"V47","target":"V72","weight":9.407637283947796},{"source":"V58","target":"V36","weight":6.025326267538204},{"source":"V27","target":"V64","weight":2.600663337487402},{"source":"V28","target":"V12","weight":5.144085943466728},{"source":"V12","target":"V45","weight":7.823945917448065},{"source":"V76","target":"V63","weight":7.658364261170057},{"source":"V8","target":"V40","weight":2.8477814298476263},{"source":"V25","target":"V74","weight":1.0894559760554081},{"source":"V42","target":"V80","weight":7.560778919638443},{"source":"V80","target":"V15","weight":9.12857725833047},{"source":"V66","target":"V76","weight":3.304013167436529},{"source":"V87","target":"V76","weight":2.9127062999809503},{"source":"V27","target":"V8","weight":8.86098993737891},{"source":"V10","target":"V60","weight":5.553479200726242},{"source":"V18","target":"V55","weight":7.834289436123436},{"source":"V90","target":"V30","weight":5.992295047207979}];
-const mstEdges=new Set(["V27-V58","V90-V33","V79-V19","V74-V38","V65-V5","V18-V11","V18-V14","V25-V45","V18-V15","V23-V37","V86-V51","V51-V57","V42-V8","V47-V74","V72-V31","V66-V41","V77-V11","V83-V89","V2-V33","V64-V27","V9-V24","V42-V11","V72-V38","V67-V79","V53-V60","V54-V13","V11-V18","V74-V47","V48-V22","V83-V82","V16-V2","V25-V39","V6-V69","V27-V64","V30-V88","V84-V59","V5-V22","V60-V3","V23-V49","V69-V81","V22-V5","V60-V7","V2-V46","V53-V54","V33-V2","V58-V27","V81-V69","V7-V20","V33-V1","V12-V84","V14-V74","V34-V19","V11-V42","V8-V42","V43-V30","V19-V79","V40-V8","V8-V40","V60-V32","V25-V74","V2-V52","V66-V60","V53-V85","V5-V7","V20-V51","V15-V18","V3-V10","V78-V40","V11-V33","V50-V39","V63-V37","V43-V22","V28-V8","V79-V67","V51-V86","V20-V7","V62-V9","V40-V78","V56-V1","V57-V51","V84-V29","V35-V34","V26-V14","V37-V23","V76-V44","V69-V6","V60-V53","V46-V2","V61-V5","V1-V33","V61-V9","V39-V25","V9-V62","V21-V68","V33-V90","V38-V72","V7-V55","V70-V69","V8-V28","V33-V11","V55-V7","V85-V53","V7-V5","V9-V61","V22-V43","V89-V76","V20-V19","V14-V26","V30-V43","V5-V61","V22-V48","V71-V16","V84-V13","V13-V84","V84-V12","V5-V65","V20-V17","V54-V53","V38-V74","V51-V20","V88-V30","V58-V9","V9-V58","V45-V25","V2-V83","V44-V76","V7-V60","V87-V76","V20-V23","V31-V72","V41-V66","V29-V84","V60-V73","V3-V60","V35-V70","V19-V34","V68-V21","V8-V80","V21-V2","V1-V56","V32-V60","V69-V70","V14-V18","V23-V20","V17-V20","V16-V71","V50-V75","V74-V25","V15-V4","V2-V16","V28-V36","V25-V19","V24-V9","V11-V77","V73-V60","V19-V25","V36-V28","V49-V23","V82-V83","V19-V20","V75-V50","V80-V8","V60-V66","V2-V21","V34-V35","V52-V2","V83-V2","V70-V35","V4-V15","V39-V50","V13-V54","V37-V63","V74-V14","V89-V83","V10-V3","V76-V87","V59-V84","V76-V89"]);
 const adj={};
 data.forEach(n=>adj[n.id]=[]);
 links.forEach(l=>{adj[l.source].push(l.target);adj[l.target].push(l.source);});
@@ -89,70 +74,63 @@ const sim=d3.forceSimulation(data).force('link',d3.forceLink(links).id(d=>d.id).
 .force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(w/2,h/2))
 .force('collision',d3.forceCollide().radius(25));
 const link=g.append('g').attr('class','links').selectAll('line').data(links).enter().append('line');
-link.each(function(d){const isMST=mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id);d3.select(this).classed('mst',isMST);});
 const weights=g.append('g').selectAll('text').data(links).enter().append('text')
 .attr('class','weight-label').attr('text-anchor','middle').attr('dy',4)
 .text(d=>d.weight.toFixed(1));
 const node=g.append('g').attr('class','nodes').selectAll('g').data(data).enter().append('g')
 .call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
 .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
-node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();if(!showingMST)filter(d.id);});
-node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id);
+node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();filter(d.id);});
+node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id.replace('V',''));
 sim.on('tick',()=>{
 link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
 weights.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2);
 node.attr('transform',d=>`translate(${d.x},${d.y})`);
 });
-let sel=null,wv=true,showingMST=false;
+let sel=null,wv=true;
 function filter(v){
 sel=v;
-const neighbors=new Set(adj[v]);
-link.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v)).classed('filtered',d=>(d.source.id===v||d.target.id===v)).classed('mst',false);
-node.select('circle').classed('highlighted',d=>d.id===v).classed('neighbor',d=>neighbors.has(d.id)&&d.id!==v).classed('inactive',d=>!neighbors.has(d.id)&&d.id!==v);
-node.select('text').classed('hidden',false);
-if(wv){weights.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v));}
+const n=new Set(adj[v]);
+n.add(v);
+node.select('circle').classed('hidden',d=>!n.has(d.id)).classed('highlighted',d=>d.id===v)
+.classed('neighbor',d=>d.id!==v&&n.has(d.id));
+node.select('text').classed('hidden',d=>!n.has(d.id));
+link.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id))
+.classed('highlighted',d=>d.source.id===v||d.target.id===v);
+if(wv){weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
 document.querySelectorAll('.vertex-item').forEach(i=>i.classList.toggle('selected',i.dataset.v===v));
-document.getElementById('neighbors').textContent=neighbors.size;
+document.getElementById('count').textContent=n.size;
+document.getElementById('neighbors').textContent=n.size-1;
 }
 function reset(){
-sel=null;showingMST=false;
-link.classed('hidden',false).classed('mst',d=>mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)).classed('filtered',false);
-node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
+sel=null;
+node.select('circle').classed('hidden',false).classed('highlighted',false).classed('neighbor',false);
 node.select('text').classed('hidden',false);
+link.classed('hidden',false).classed('highlighted',false);
 if(wv){weights.classed('hidden',false);}
 document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
+document.getElementById('count').textContent=data.length;
 document.getElementById('neighbors').textContent=0;
-}
-function showMST(){
-showingMST=!showingMST;sel=null;
-if(showingMST){
-node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
-node.select('text').classed('hidden',false);
-link.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id))).classed('mst',true).classed('filtered',false);
-if(wv){weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
-document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
-}
-else{reset();}
 }
 function toggleWeights(){
 wv=!wv;
 if(!wv){weights.classed('hidden',true);}
 else if(sel){
-weights.classed('hidden',d=>(d.source.id!==sel&&d.target.id!==sel));}
-else if(showingMST){
-weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
+const n=new Set(adj[sel]);
+n.add(sel);
+weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
 else{weights.classed('hidden',false);}}
 function search(){
 const q=document.getElementById('search').value.toLowerCase();
 document.querySelectorAll('.vertex-item').forEach(i=>i.style.display=i.textContent.toLowerCase().includes(q)?'block':'none');
 }
 const list=document.getElementById('list');
-data.sort((a,b)=>a.id.localeCompare(b.id)).forEach(n=>{
+data.sort((a,b)=>parseInt(a.id.replace('V',''))-parseInt(b.id.replace('V',''))).forEach(n=>{
 const deg=adj[n.id].length;
 const item=document.createElement('div');
 item.className='vertex-item';item.dataset.v=n.id;
 item.innerHTML=`${n.id} <span class='degree'>${deg}</span>`;
-item.onclick=()=>{if(!showingMST)filter(n.id);};
+item.onclick=()=>filter(n.id);
 list.appendChild(item);
 });
 </script>

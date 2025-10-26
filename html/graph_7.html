@@ -15,7 +15,6 @@ h1{color:#333;margin:0 0 10px 0}
 button{background:#2196F3;color:white;border:none;padding:8px 15px;margin:3px;border-radius:5px;cursor:pointer;font-size:13px;width:100%}
 button:hover{background:#1976D2}
 button.reset{background:#FF5722}
-button.mst{background:#4CAF50}
 .vertex-list{margin-top:15px}
 .vertex-item{background:white;padding:10px;margin:5px 0;border-radius:5px;cursor:pointer;border:2px solid transparent;font-size:13px}
 .vertex-item:hover{border-color:#2196F3;background:#e3f2fd}
@@ -26,11 +25,9 @@ button.mst{background:#4CAF50}
 #graph{border:1px solid #ddd;background:white;border-radius:5px}
 .links line{stroke:#999;stroke-opacity:0.6;stroke-width:1.5px}
 .links line.hidden{display:none}
-.links line.mst{stroke:#4CAF50;stroke-width:2.5px;stroke-opacity:0.9}
-.links line.filtered{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
+.links line.highlighted{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
 .nodes circle{stroke:#fff;stroke-width:2px;fill:#2196F3;cursor:pointer}
 .nodes circle.hidden{display:none}
-.nodes circle.inactive{fill:#999;opacity:0.5}
 .nodes circle.highlighted{fill:#4CAF50;r:18;stroke-width:3px}
 .nodes circle.neighbor{fill:#FF9800}
 .nodes text{font-size:11px;font-weight:bold;fill:white;pointer-events:none}
@@ -39,9 +36,6 @@ button.mst{background:#4CAF50}
 .weight-label.hidden{display:none}
 .stats{margin-top:15px;padding:10px;background:#fff3e0;border-radius:5px;font-size:12px}
 .stats div{margin:5px 0}
-.legend{margin-top:10px;padding:10px;background:#e8f5e9;border-radius:5px;font-size:12px}
-.legend-item{margin:5px 0}
-.legend-color{display:inline-block;width:15px;height:15px;border-radius:2px;margin-right:8px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -54,21 +48,13 @@ Vertices: 60<br>Edges: 180<br>Avg Degree: 6,0
 </div>
 <div class='controls'>
 <button class='reset' onclick='reset()'>Show All</button>
-<button class='mst' onclick='showMST()'>Highlight MST</button>
 <button onclick='toggleWeights()'>Toggle Weights</button>
 </div>
 <input type='text' class='search-box' id='search' placeholder='Search...' onkeyup='search()'>
 <div class='vertex-list' id='list'></div>
 <div class='stats' id='stats'>
 <div>Showing: <strong id='count'>60</strong> vertices</div>
-<div>Connected edges: <strong id='neighbors'>0</strong></div>
-</div>
-<div class='legend'>
-<div class='legend-item'><span class='legend-color' style='background:#999;'></span>Inactive</div>
-<div class='legend-item'><span class='legend-color' style='background:#FF9800;'></span>Neighbor</div>
-<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>Selected</div>
-<div class='legend-item'><span class='legend-color' style='background:#FF5722;'></span>Selected edge</div>
-<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>MST edge</div>
+<div>Selected neighbors: <strong id='neighbors'>0</strong></div>
 </div>
 </div>
 <div><svg id='graph' width='1100' height='700'></svg></div>
@@ -76,7 +62,6 @@ Vertices: 60<br>Edges: 180<br>Avg Degree: 6,0
 <script>
 const data=[{"id":"V1"},{"id":"V2"},{"id":"V3"},{"id":"V4"},{"id":"V5"},{"id":"V6"},{"id":"V7"},{"id":"V8"},{"id":"V9"},{"id":"V10"},{"id":"V11"},{"id":"V12"},{"id":"V13"},{"id":"V14"},{"id":"V15"},{"id":"V16"},{"id":"V17"},{"id":"V18"},{"id":"V19"},{"id":"V20"},{"id":"V21"},{"id":"V22"},{"id":"V23"},{"id":"V24"},{"id":"V25"},{"id":"V26"},{"id":"V27"},{"id":"V28"},{"id":"V29"},{"id":"V30"},{"id":"V31"},{"id":"V32"},{"id":"V33"},{"id":"V34"},{"id":"V35"},{"id":"V36"},{"id":"V37"},{"id":"V38"},{"id":"V39"},{"id":"V40"},{"id":"V41"},{"id":"V42"},{"id":"V43"},{"id":"V44"},{"id":"V45"},{"id":"V46"},{"id":"V47"},{"id":"V48"},{"id":"V49"},{"id":"V50"},{"id":"V51"},{"id":"V52"},{"id":"V53"},{"id":"V54"},{"id":"V55"},{"id":"V56"},{"id":"V57"},{"id":"V58"},{"id":"V59"},{"id":"V60"}];
 const links=[{"source":"V1","target":"V2","weight":2.9251634955874017},{"source":"V2","target":"V3","weight":4.317133441835544},{"source":"V1","target":"V4","weight":6.724933708563627},{"source":"V1","target":"V5","weight":5.943702768080303},{"source":"V2","target":"V6","weight":7.705623167869254},{"source":"V3","target":"V7","weight":8.167291025579924},{"source":"V1","target":"V8","weight":5.769557525653417},{"source":"V1","target":"V9","weight":0.015435916855026655},{"source":"V3","target":"V10","weight":8.077057680667565},{"source":"V3","target":"V11","weight":1.3156069120930491},{"source":"V6","target":"V12","weight":2.665891136547919},{"source":"V8","target":"V13","weight":9.150223496212917},{"source":"V9","target":"V14","weight":6.170192635062428},{"source":"V5","target":"V15","weight":6.790870905947719},{"source":"V8","target":"V16","weight":0.2859809835485094},{"source":"V4","target":"V17","weight":1.995014028204155},{"source":"V10","target":"V18","weight":7.341990664343849},{"source":"V5","target":"V19","weight":2.8739870603156827},{"source":"V18","target":"V20","weight":2.7914312344151213},{"source":"V3","target":"V21","weight":8.112095236678215},{"source":"V13","target":"V22","weight":3.8006925637582425},{"source":"V7","target":"V23","weight":1.498296591523075},{"source":"V18","target":"V24","weight":9.302598575688808},{"source":"V19","target":"V25","weight":9.3323783794207},{"source":"V3","target":"V26","weight":9.164803117761071},{"source":"V3","target":"V27","weight":1.0862199689482788},{"source":"V3","target":"V28","weight":5.399365722910817},{"source":"V20","target":"V29","weight":9.942453956159008},{"source":"V9","target":"V30","weight":8.241633573994434},{"source":"V18","target":"V31","weight":1.458493389879938},{"source":"V4","target":"V32","weight":3.4258997998493754},{"source":"V5","target":"V33","weight":3.125497102910122},{"source":"V26","target":"V34","weight":8.416761458231944},{"source":"V14","target":"V35","weight":2.7572807817459086},{"source":"V2","target":"V36","weight":4.472179620259416},{"source":"V12","target":"V37","weight":2.8942284550916186},{"source":"V23","target":"V38","weight":9.258819827938584},{"source":"V1","target":"V39","weight":3.92570288315645},{"source":"V34","target":"V40","weight":8.804338214554067},{"source":"V4","target":"V41","weight":1.2484010211219132},{"source":"V11","target":"V42","weight":1.9147652966989104},{"source":"V16","target":"V43","weight":2.9045574278979536},{"source":"V41","target":"V44","weight":0.8613043502153472},{"source":"V23","target":"V45","weight":3.4147823482869932},{"source":"V37","target":"V46","weight":5.468355953555008},{"source":"V39","target":"V47","weight":2.656662970836703},{"source":"V13","target":"V48","weight":8.642848916348278},{"source":"V20","target":"V49","weight":3.5831510677650282},{"source":"V14","target":"V50","weight":1.2468528845791105},{"source":"V1","target":"V51","weight":7.818531325219865},{"source":"V51","target":"V52","weight":2.26870355868222},{"source":"V6","target":"V53","weight":5.680006564589938},{"source":"V4","target":"V54","weight":9.894624904714938},{"source":"V33","target":"V55","weight":3.209929565752019},{"source":"V24","target":"V56","weight":0.043454657384446316},{"source":"V43","target":"V57","weight":9.408834749909754},{"source":"V6","target":"V58","weight":8.412736675583126},{"source":"V36","target":"V59","weight":0.7000304839426263},{"source":"V41","target":"V60","weight":2.8396736797952036},{"source":"V47","target":"V37","weight":3.5192622236621496},{"source":"V31","target":"V40","weight":4.128834322860013},{"source":"V3","target":"V24","weight":5.3229241242597105},{"source":"V11","target":"V20","weight":3.5698446566436846},{"source":"V5","target":"V11","weight":9.36639774831776},{"source":"V60","target":"V43","weight":4.6449150748509265},{"source":"V45","target":"V29","weight":5.81229141322561},{"source":"V43","target":"V29","weight":1.0732327894972273},{"source":"V42","target":"V57","weight":5.850040120232445},{"source":"V28","target":"V33","weight":9.441330547999184},{"source":"V50","target":"V30","weight":8.104077279168298},{"source":"V59","target":"V34","weight":7.928651588294095},{"source":"V53","target":"V13","weight":8.963692980883625},{"source":"V30","target":"V23","weight":7.1687365912117125},{"source":"V46","target":"V40","weight":7.551693393985087},{"source":"V32","target":"V36","weight":3.6638583709789296},{"source":"V1","target":"V53","weight":6.388027084058453},{"source":"V48","target":"V22","weight":3.8977627179535554},{"source":"V45","target":"V8","weight":5.473178340749095},{"source":"V6","target":"V15","weight":2.5798130887198756},{"source":"V27","target":"V4","weight":1.3191626046983895},{"source":"V30","target":"V13","weight":1.063909394801054},{"source":"V50","target":"V25","weight":7.623985480094769},{"source":"V25","target":"V12","weight":8.411608124372556},{"source":"V9","target":"V3","weight":8.506055053881822},{"source":"V47","target":"V8","weight":9.216275505787065},{"source":"V18","target":"V29","weight":3.6711950045955204},{"source":"V32","target":"V1","weight":9.369134669226971},{"source":"V28","target":"V21","weight":2.2400747175897493},{"source":"V11","target":"V38","weight":8.134182909999282},{"source":"V9","target":"V51","weight":5.2793008562269605},{"source":"V8","target":"V19","weight":7.94680367541632},{"source":"V56","target":"V11","weight":4.642887227577859},{"source":"V59","target":"V16","weight":4.680000225209061},{"source":"V32","target":"V41","weight":9.075551545299748},{"source":"V37","target":"V14","weight":2.732529359132654},{"source":"V58","target":"V38","weight":6.655262872503994},{"source":"V34","target":"V57","weight":3.1848168470546807},{"source":"V26","target":"V27","weight":8.559686951555175},{"source":"V33","target":"V6","weight":6.441383457959674},{"source":"V6","target":"V14","weight":1.829657817709827},{"source":"V46","target":"V8","weight":2.2326171876604133},{"source":"V21","target":"V9","weight":1.2725272242682644},{"source":"V40","target":"V29","weight":4.58407586210833},{"source":"V1","target":"V24","weight":1.8992220236339592},{"source":"V58","target":"V31","weight":4.37810654576173},{"source":"V1","target":"V60","weight":5.321065302393408},{"source":"V33","target":"V41","weight":4.430418613972986},{"source":"V23","target":"V48","weight":4.345892709674843},{"source":"V44","target":"V29","weight":9.583351855654145},{"source":"V10","target":"V28","weight":2.607724801709402},{"source":"V7","target":"V53","weight":2.1779292310699474},{"source":"V41","target":"V34","weight":1.440228891088251},{"source":"V32","target":"V6","weight":6.537790303375732},{"source":"V33","target":"V31","weight":9.22737370549317},{"source":"V29","target":"V54","weight":1.261983954845051},{"source":"V33","target":"V19","weight":5.747102330150613},{"source":"V24","target":"V55","weight":2.0897462981996218},{"source":"V46","target":"V53","weight":4.950903341982734},{"source":"V22","target":"V56","weight":9.043802160580542},{"source":"V15","target":"V51","weight":5.664972277084737},{"source":"V44","target":"V42","weight":6.8423283228784575},{"source":"V26","target":"V15","weight":9.976495026118041},{"source":"V47","target":"V32","weight":6.612669963940574},{"source":"V56","target":"V16","weight":3.4255448026149047},{"source":"V42","target":"V32","weight":3.9348397432203197},{"source":"V14","target":"V25","weight":8.840131670102265},{"source":"V59","target":"V32","weight":9.007797213408503},{"source":"V18","target":"V50","weight":3.037577052375367},{"source":"V60","target":"V50","weight":5.349671611695955},{"source":"V36","target":"V16","weight":9.874178986034119},{"source":"V7","target":"V29","weight":8.592507864543284},{"source":"V21","target":"V5","weight":8.415172268045348},{"source":"V26","target":"V49","weight":3.612773395558354},{"source":"V22","target":"V3","weight":4.318271774164816},{"source":"V44","target":"V15","weight":2.4507857868561094},{"source":"V33","target":"V36","weight":5.876636388448759},{"source":"V9","target":"V35","weight":5.215376324590446},{"source":"V51","target":"V16","weight":9.550866968327364},{"source":"V33","target":"V37","weight":4.692527996888371},{"source":"V29","target":"V46","weight":5.957535021518438},{"source":"V56","target":"V46","weight":7.07667388464958},{"source":"V23","target":"V14","weight":5.4033588534753125},{"source":"V55","target":"V26","weight":4.184882849606458},{"source":"V53","target":"V17","weight":1.0283595227913103},{"source":"V17","target":"V13","weight":1.8624792987306562},{"source":"V36","target":"V42","weight":8.642761068811481},{"source":"V37","target":"V39","weight":9.390762242877848},{"source":"V17","target":"V32","weight":6.327696541674569},{"source":"V49","target":"V34","weight":4.829830396129789},{"source":"V1","target":"V20","weight":2.9322408981975308},{"source":"V28","target":"V34","weight":1.8899888675007097},{"source":"V19","target":"V49","weight":1.3881068312705498},{"source":"V20","target":"V3","weight":8.906229434496318},{"source":"V47","target":"V49","weight":2.288071201917174},{"source":"V24","target":"V31","weight":9.053755482503245},{"source":"V32","target":"V22","weight":6.503313872897462},{"source":"V59","target":"V54","weight":2.2872464114854734},{"source":"V23","target":"V16","weight":5.225195480922119},{"source":"V54","target":"V39","weight":2.612536453691831},{"source":"V2","target":"V7","weight":2.708604462618414},{"source":"V33","target":"V2","weight":3.206607343094269},{"source":"V34","target":"V9","weight":6.55200873061611},{"source":"V22","target":"V2","weight":7.816471760210321},{"source":"V7","target":"V10","weight":8.388833287665346},{"source":"V47","target":"V27","weight":2.1266498334443886},{"source":"V60","target":"V29","weight":3.599945494179998},{"source":"V33","target":"V44","weight":7.008994018167639},{"source":"V14","target":"V8","weight":9.079367674453362},{"source":"V20","target":"V14","weight":2.6338932980690895},{"source":"V27","target":"V25","weight":5.180165617669178},{"source":"V38","target":"V55","weight":1.4723014284633522},{"source":"V29","target":"V30","weight":2.6623269318039298},{"source":"V19","target":"V37","weight":8.046272676863529},{"source":"V28","target":"V9","weight":1.1196225526833201},{"source":"V24","target":"V57","weight":9.233024681817167},{"source":"V9","target":"V27","weight":4.161522614233672},{"source":"V52","target":"V27","weight":5.764663420609084},{"source":"V4","target":"V28","weight":6.49047550175503},{"source":"V4","target":"V39","weight":7.039774239451502},{"source":"V55","target":"V1","weight":3.4703141032686005}];
-const mstEdges=new Set(["V41-V44","V44-V15","V13-V30","V51-V52","V27-V4","V9-V28","V5-V19","V28-V10","V9-V21","V58-V31","V27-V3","V56-V24","V4-V41","V42-V11","V13-V22","V51-V9","V48-V22","V31-V40","V50-V14","V19-V49","V29-V54","V23-V45","V33-V5","V17-V53","V4-V32","V7-V23","V16-V8","V11-V42","V22-V13","V19-V5","V18-V31","V29-V43","V8-V46","V30-V13","V31-V58","V3-V27","V53-V7","V44-V41","V43-V29","V11-V3","V54-V39","V27-V47","V41-V34","V3-V11","V18-V20","V59-V36","V38-V55","V1-V24","V28-V9","V14-V50","V43-V16","V13-V17","V54-V29","V14-V6","V14-V37","V46-V8","V6-V15","V6-V14","V17-V4","V14-V35","V6-V12","V16-V43","V52-V51","V57-V34","V55-V24","V36-V59","V23-V7","V53-V17","V26-V49","V32-V4","V7-V53","V47-V27","V54-V59","V7-V2","V37-V14","V20-V18","V27-V25","V2-V7","V60-V41","V22-V48","V59-V54","V20-V14","V14-V20","V49-V47","V55-V38","V9-V51","V34-V57","V17-V13","V45-V23","V8-V16","V35-V14","V12-V6","V49-V19","V21-V9","V31-V18","V1-V9","V5-V33","V41-V60","V25-V27","V39-V47","V9-V1","V28-V34","V34-V28","V47-V49","V24-V55","V24-V56","V15-V6","V4-V27","V49-V26","V24-V1","V10-V28","V41-V4","V34-V41","V15-V44","V40-V31","V47-V39","V39-V54","V4-V17"]);
 const adj={};
 data.forEach(n=>adj[n.id]=[]);
 links.forEach(l=>{adj[l.source].push(l.target);adj[l.target].push(l.source);});
@@ -89,70 +74,63 @@ const sim=d3.forceSimulation(data).force('link',d3.forceLink(links).id(d=>d.id).
 .force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(w/2,h/2))
 .force('collision',d3.forceCollide().radius(25));
 const link=g.append('g').attr('class','links').selectAll('line').data(links).enter().append('line');
-link.each(function(d){const isMST=mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id);d3.select(this).classed('mst',isMST);});
 const weights=g.append('g').selectAll('text').data(links).enter().append('text')
 .attr('class','weight-label').attr('text-anchor','middle').attr('dy',4)
 .text(d=>d.weight.toFixed(1));
 const node=g.append('g').attr('class','nodes').selectAll('g').data(data).enter().append('g')
 .call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
 .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
-node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();if(!showingMST)filter(d.id);});
-node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id);
+node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();filter(d.id);});
+node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id.replace('V',''));
 sim.on('tick',()=>{
 link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
 weights.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2);
 node.attr('transform',d=>`translate(${d.x},${d.y})`);
 });
-let sel=null,wv=true,showingMST=false;
+let sel=null,wv=true;
 function filter(v){
 sel=v;
-const neighbors=new Set(adj[v]);
-link.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v)).classed('filtered',d=>(d.source.id===v||d.target.id===v)).classed('mst',false);
-node.select('circle').classed('highlighted',d=>d.id===v).classed('neighbor',d=>neighbors.has(d.id)&&d.id!==v).classed('inactive',d=>!neighbors.has(d.id)&&d.id!==v);
-node.select('text').classed('hidden',false);
-if(wv){weights.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v));}
+const n=new Set(adj[v]);
+n.add(v);
+node.select('circle').classed('hidden',d=>!n.has(d.id)).classed('highlighted',d=>d.id===v)
+.classed('neighbor',d=>d.id!==v&&n.has(d.id));
+node.select('text').classed('hidden',d=>!n.has(d.id));
+link.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id))
+.classed('highlighted',d=>d.source.id===v||d.target.id===v);
+if(wv){weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
 document.querySelectorAll('.vertex-item').forEach(i=>i.classList.toggle('selected',i.dataset.v===v));
-document.getElementById('neighbors').textContent=neighbors.size;
+document.getElementById('count').textContent=n.size;
+document.getElementById('neighbors').textContent=n.size-1;
 }
 function reset(){
-sel=null;showingMST=false;
-link.classed('hidden',false).classed('mst',d=>mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)).classed('filtered',false);
-node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
+sel=null;
+node.select('circle').classed('hidden',false).classed('highlighted',false).classed('neighbor',false);
 node.select('text').classed('hidden',false);
+link.classed('hidden',false).classed('highlighted',false);
 if(wv){weights.classed('hidden',false);}
 document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
+document.getElementById('count').textContent=data.length;
 document.getElementById('neighbors').textContent=0;
-}
-function showMST(){
-showingMST=!showingMST;sel=null;
-if(showingMST){
-node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
-node.select('text').classed('hidden',false);
-link.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id))).classed('mst',true).classed('filtered',false);
-if(wv){weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
-document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
-}
-else{reset();}
 }
 function toggleWeights(){
 wv=!wv;
 if(!wv){weights.classed('hidden',true);}
 else if(sel){
-weights.classed('hidden',d=>(d.source.id!==sel&&d.target.id!==sel));}
-else if(showingMST){
-weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
+const n=new Set(adj[sel]);
+n.add(sel);
+weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
 else{weights.classed('hidden',false);}}
 function search(){
 const q=document.getElementById('search').value.toLowerCase();
 document.querySelectorAll('.vertex-item').forEach(i=>i.style.display=i.textContent.toLowerCase().includes(q)?'block':'none');
 }
 const list=document.getElementById('list');
-data.sort((a,b)=>a.id.localeCompare(b.id)).forEach(n=>{
+data.sort((a,b)=>parseInt(a.id.replace('V',''))-parseInt(b.id.replace('V',''))).forEach(n=>{
 const deg=adj[n.id].length;
 const item=document.createElement('div');
 item.className='vertex-item';item.dataset.v=n.id;
 item.innerHTML=`${n.id} <span class='degree'>${deg}</span>`;
-item.onclick=()=>{if(!showingMST)filter(n.id);};
+item.onclick=()=>filter(n.id);
 list.appendChild(item);
 });
 </script>

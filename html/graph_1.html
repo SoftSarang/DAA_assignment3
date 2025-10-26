@@ -15,7 +15,6 @@ h1{color:#333;margin:0 0 10px 0}
 button{background:#2196F3;color:white;border:none;padding:8px 15px;margin:3px;border-radius:5px;cursor:pointer;font-size:13px;width:100%}
 button:hover{background:#1976D2}
 button.reset{background:#FF5722}
-button.mst{background:#4CAF50}
 .vertex-list{margin-top:15px}
 .vertex-item{background:white;padding:10px;margin:5px 0;border-radius:5px;cursor:pointer;border:2px solid transparent;font-size:13px}
 .vertex-item:hover{border-color:#2196F3;background:#e3f2fd}
@@ -26,11 +25,9 @@ button.mst{background:#4CAF50}
 #graph{border:1px solid #ddd;background:white;border-radius:5px}
 .links line{stroke:#999;stroke-opacity:0.6;stroke-width:1.5px}
 .links line.hidden{display:none}
-.links line.mst{stroke:#4CAF50;stroke-width:2.5px;stroke-opacity:0.9}
-.links line.filtered{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
+.links line.highlighted{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
 .nodes circle{stroke:#fff;stroke-width:2px;fill:#2196F3;cursor:pointer}
 .nodes circle.hidden{display:none}
-.nodes circle.inactive{fill:#999;opacity:0.5}
 .nodes circle.highlighted{fill:#4CAF50;r:18;stroke-width:3px}
 .nodes circle.neighbor{fill:#FF9800}
 .nodes text{font-size:11px;font-weight:bold;fill:white;pointer-events:none}
@@ -39,9 +36,6 @@ button.mst{background:#4CAF50}
 .weight-label.hidden{display:none}
 .stats{margin-top:15px;padding:10px;background:#fff3e0;border-radius:5px;font-size:12px}
 .stats div{margin:5px 0}
-.legend{margin-top:10px;padding:10px;background:#e8f5e9;border-radius:5px;font-size:12px}
-.legend-item{margin:5px 0}
-.legend-color{display:inline-block;width:15px;height:15px;border-radius:2px;margin-right:8px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -54,21 +48,13 @@ Vertices: 5<br>Edges: 10<br>Avg Degree: 4,0
 </div>
 <div class='controls'>
 <button class='reset' onclick='reset()'>Show All</button>
-<button class='mst' onclick='showMST()'>Highlight MST</button>
 <button onclick='toggleWeights()'>Toggle Weights</button>
 </div>
 <input type='text' class='search-box' id='search' placeholder='Search...' onkeyup='search()'>
 <div class='vertex-list' id='list'></div>
 <div class='stats' id='stats'>
 <div>Showing: <strong id='count'>5</strong> vertices</div>
-<div>Connected edges: <strong id='neighbors'>0</strong></div>
-</div>
-<div class='legend'>
-<div class='legend-item'><span class='legend-color' style='background:#999;'></span>Inactive</div>
-<div class='legend-item'><span class='legend-color' style='background:#FF9800;'></span>Neighbor</div>
-<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>Selected</div>
-<div class='legend-item'><span class='legend-color' style='background:#FF5722;'></span>Selected edge</div>
-<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>MST edge</div>
+<div>Selected neighbors: <strong id='neighbors'>0</strong></div>
 </div>
 </div>
 <div><svg id='graph' width='1100' height='700'></svg></div>
@@ -76,7 +62,6 @@ Vertices: 5<br>Edges: 10<br>Avg Degree: 4,0
 <script>
 const data=[{"id":"V1"},{"id":"V2"},{"id":"V3"},{"id":"V4"},{"id":"V5"}];
 const links=[{"source":"V1","target":"V2","weight":5.047281833372641},{"source":"V1","target":"V3","weight":0.2462251368473456},{"source":"V1","target":"V4","weight":5.330353079632243},{"source":"V2","target":"V5","weight":3.540603119238319},{"source":"V5","target":"V1","weight":6.562565074473654},{"source":"V5","target":"V4","weight":8.443267500593114},{"source":"V2","target":"V3","weight":7.717112623474936},{"source":"V4","target":"V2","weight":8.291119391916435},{"source":"V3","target":"V4","weight":1.0639609192540043},{"source":"V3","target":"V5","weight":1.8143759458854465}];
-const mstEdges=new Set(["V2-V5","V3-V1","V4-V3","V3-V5","V1-V3","V3-V4","V5-V2","V5-V3"]);
 const adj={};
 data.forEach(n=>adj[n.id]=[]);
 links.forEach(l=>{adj[l.source].push(l.target);adj[l.target].push(l.source);});
@@ -89,70 +74,63 @@ const sim=d3.forceSimulation(data).force('link',d3.forceLink(links).id(d=>d.id).
 .force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(w/2,h/2))
 .force('collision',d3.forceCollide().radius(25));
 const link=g.append('g').attr('class','links').selectAll('line').data(links).enter().append('line');
-link.each(function(d){const isMST=mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id);d3.select(this).classed('mst',isMST);});
 const weights=g.append('g').selectAll('text').data(links).enter().append('text')
 .attr('class','weight-label').attr('text-anchor','middle').attr('dy',4)
 .text(d=>d.weight.toFixed(1));
 const node=g.append('g').attr('class','nodes').selectAll('g').data(data).enter().append('g')
 .call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
 .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
-node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();if(!showingMST)filter(d.id);});
-node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id);
+node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();filter(d.id);});
+node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id.replace('V',''));
 sim.on('tick',()=>{
 link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
 weights.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2);
 node.attr('transform',d=>`translate(${d.x},${d.y})`);
 });
-let sel=null,wv=true,showingMST=false;
+let sel=null,wv=true;
 function filter(v){
 sel=v;
-const neighbors=new Set(adj[v]);
-link.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v)).classed('filtered',d=>(d.source.id===v||d.target.id===v)).classed('mst',false);
-node.select('circle').classed('highlighted',d=>d.id===v).classed('neighbor',d=>neighbors.has(d.id)&&d.id!==v).classed('inactive',d=>!neighbors.has(d.id)&&d.id!==v);
-node.select('text').classed('hidden',false);
-if(wv){weights.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v));}
+const n=new Set(adj[v]);
+n.add(v);
+node.select('circle').classed('hidden',d=>!n.has(d.id)).classed('highlighted',d=>d.id===v)
+.classed('neighbor',d=>d.id!==v&&n.has(d.id));
+node.select('text').classed('hidden',d=>!n.has(d.id));
+link.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id))
+.classed('highlighted',d=>d.source.id===v||d.target.id===v);
+if(wv){weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
 document.querySelectorAll('.vertex-item').forEach(i=>i.classList.toggle('selected',i.dataset.v===v));
-document.getElementById('neighbors').textContent=neighbors.size;
+document.getElementById('count').textContent=n.size;
+document.getElementById('neighbors').textContent=n.size-1;
 }
 function reset(){
-sel=null;showingMST=false;
-link.classed('hidden',false).classed('mst',d=>mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)).classed('filtered',false);
-node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
+sel=null;
+node.select('circle').classed('hidden',false).classed('highlighted',false).classed('neighbor',false);
 node.select('text').classed('hidden',false);
+link.classed('hidden',false).classed('highlighted',false);
 if(wv){weights.classed('hidden',false);}
 document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
+document.getElementById('count').textContent=data.length;
 document.getElementById('neighbors').textContent=0;
-}
-function showMST(){
-showingMST=!showingMST;sel=null;
-if(showingMST){
-node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
-node.select('text').classed('hidden',false);
-link.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id))).classed('mst',true).classed('filtered',false);
-if(wv){weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
-document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
-}
-else{reset();}
 }
 function toggleWeights(){
 wv=!wv;
 if(!wv){weights.classed('hidden',true);}
 else if(sel){
-weights.classed('hidden',d=>(d.source.id!==sel&&d.target.id!==sel));}
-else if(showingMST){
-weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
+const n=new Set(adj[sel]);
+n.add(sel);
+weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
 else{weights.classed('hidden',false);}}
 function search(){
 const q=document.getElementById('search').value.toLowerCase();
 document.querySelectorAll('.vertex-item').forEach(i=>i.style.display=i.textContent.toLowerCase().includes(q)?'block':'none');
 }
 const list=document.getElementById('list');
-data.sort((a,b)=>a.id.localeCompare(b.id)).forEach(n=>{
+data.sort((a,b)=>parseInt(a.id.replace('V',''))-parseInt(b.id.replace('V',''))).forEach(n=>{
 const deg=adj[n.id].length;
 const item=document.createElement('div');
 item.className='vertex-item';item.dataset.v=n.id;
 item.innerHTML=`${n.id} <span class='degree'>${deg}</span>`;
-item.onclick=()=>{if(!showingMST)filter(n.id);};
+item.onclick=()=>filter(n.id);
 list.appendChild(item);
 });
 </script>
