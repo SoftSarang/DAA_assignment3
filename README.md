@@ -37,12 +37,12 @@ The goal is to connect all districts with the minimum total cost while ensuring 
 
 I created 28 test graphs with increasing complexity:
 
-| Category | Vertices | Edges | Graphs | Notes |
-|----------|----------|-------|--------|-------|
-| Small | 5-25 | 10-75 | 5 | Quick sanity checks |
-| Medium | 30-300 | 90-900 | 10 | Typical city networks |
-| Large | 350-1000 | 1400-4000 | 10 | Big cities |
-| Extra Large | 1300-2000 | 5200-8000 | 3 | Stress testing |
+| Category | Vertices | Edges | Graphs |
+|----------|----------|-------|--------|
+| Small | 5-25 | 10-75 | 5 | 
+| Medium | 30-300 | 90-900 | 10 | 
+| Large | 350-1000 | 1400-4000 | 10 | 
+| Extra Large | 1300-2000 | 5200-8000 | 3 | 
 
 All graphs have an edge-to-vertex ratio between 2 and 4, which represents realistic sparse networks (you don't need roads between every pair of districts).
 
@@ -95,6 +95,13 @@ The sorting overhead in Kruskal really dominates at this scale. Even though Krus
 
 ## Conclusions
 
+| Criteria | Better Algorithm |
+|-----------|------------------|
+| Small sparse graphs | Kruskal |
+| Large dense networks | **Prim** |
+| Scalability | **Prim** |
+| Consistent performance | **Prim** |
+| Memory efficiency | Kruskal |
 
 **Prim's algorithm is the better choice** because:
 - Faster on 85% of test cases
@@ -110,12 +117,37 @@ The theoretical analysis matches practice. Both algorithms are O(E log) for spar
 
 If I were actually building a tool for city planners, I'd implement Prim's algorithm for the main use case, with Kruskal as a fallback option for specific scenarios.
 
-Output files are saved to `data/`:
+## BONUS: Graph Visualization
+
+I implemented a graph visualizer that generates visual representations of all 28  graphs.
+
+### Features
+
+**Two visualization formats:**
+- **HTML** - D3.js-based interactive visualizations with filtering
+- **PNG** - Static images
+
+**Interactive controls:**
+- Click any vertex to filter and show only its neighbors
+- Toggle edge weights visibility
+- Search for specific vertices
+- Drag vertices to rearrange layout
+- Zoom and pan controls
+
+### Why Interactive Visualization?
+
+Graphs with 100+ vertices become unreadable as static images. The interactive HTML version solves this by allowing vertex-by-vertex exploration. When you select a vertex, only that vertex and its immediate neighbors are shown, making even graphs with 2000 vertices comprehensible.
+
+## Output Files
+Output files are saved to `data/` and `graphs/`:
 - `input.json` - input graphs
 - `output.json` - MST results
 - `output.csv` - performance metrics
+- `html` -  interactive visualizations
+- `png` - static visualizations
 
 ## References
 
 - Algorithms, 4th Edition (Sedgewick & Wayne) - Chapters 1.5 and 4.3
 - Introduction to Algorithms - Chapter 21
+
