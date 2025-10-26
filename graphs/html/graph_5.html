@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+<title>Graph 5</title>
+<script src='https://d3js.org/d3.v7.min.js'></script>
+<style>
+body{font-family:Arial;margin:0;padding:20px;background:#f5f5f5}
+.container{max-width:1600px;margin:0 auto;background:white;padding:20px;border-radius:10px}
+h1{color:#333;margin:0 0 10px 0}
+.layout{display:grid;grid-template-columns:250px 1fr;gap:20px}
+.sidebar{background:#f8f9fa;padding:15px;border-radius:8px;max-height:700px;overflow-y:auto}
+.info{background:#e3f2fd;padding:15px;border-radius:5px;margin-bottom:15px;font-size:14px}
+.controls{margin-bottom:15px}
+button{background:#2196F3;color:white;border:none;padding:8px 15px;margin:3px;border-radius:5px;cursor:pointer;font-size:13px;width:100%}
+button:hover{background:#1976D2}
+button.reset{background:#FF5722}
+button.mst{background:#4CAF50}
+.vertex-list{margin-top:15px}
+.vertex-item{background:white;padding:10px;margin:5px 0;border-radius:5px;cursor:pointer;border:2px solid transparent;font-size:13px}
+.vertex-item:hover{border-color:#2196F3;background:#e3f2fd}
+.vertex-item.selected{background:#4CAF50;color:white;border-color:#4CAF50}
+.vertex-item .degree{float:right;color:#999;font-size:11px}
+.vertex-item.selected .degree{color:white}
+.search-box{width:100%;padding:8px;margin-bottom:10px;border:1px solid #ddd;border-radius:5px;box-sizing:border-box}
+#graph{border:1px solid #ddd;background:white;border-radius:5px}
+.links line{stroke:#999;stroke-opacity:0.6;stroke-width:1.5px}
+.links line.hidden{display:none}
+.links line.mst{stroke:#4CAF50;stroke-width:2.5px;stroke-opacity:0.9}
+.links line.filtered{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
+.nodes circle{stroke:#fff;stroke-width:2px;fill:#2196F3;cursor:pointer}
+.nodes circle.hidden{display:none}
+.nodes circle.inactive{fill:#999;opacity:0.5}
+.nodes circle.highlighted{fill:#4CAF50;r:18;stroke-width:3px}
+.nodes circle.neighbor{fill:#FF9800}
+.nodes text{font-size:11px;font-weight:bold;fill:white;pointer-events:none}
+.nodes text.hidden{display:none}
+.weight-label{fill:#1565C0;font-size:11px;font-weight:bold;pointer-events:none}
+.weight-label.hidden{display:none}
+.stats{margin-top:15px;padding:10px;background:#fff3e0;border-radius:5px;font-size:12px}
+.stats div{margin:5px 0}
+.legend{margin-top:10px;padding:10px;background:#e8f5e9;border-radius:5px;font-size:12px}
+.legend-item{margin:5px 0}
+.legend-color{display:inline-block;width:15px;height:15px;border-radius:2px;margin-right:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class='container'>
+<h1>Graph 5</h1>
+<div class='layout'>
+<div class='sidebar'>
+<div class='info'>
+Vertices: 25<br>Edges: 75<br>Avg Degree: 6,0
+</div>
+<div class='controls'>
+<button class='reset' onclick='reset()'>Show All</button>
+<button class='mst' onclick='showMST()'>Highlight MST</button>
+<button onclick='toggleWeights()'>Toggle Weights</button>
+</div>
+<input type='text' class='search-box' id='search' placeholder='Search...' onkeyup='search()'>
+<div class='vertex-list' id='list'></div>
+<div class='stats' id='stats'>
+<div>Showing: <strong id='count'>25</strong> vertices</div>
+<div>Connected edges: <strong id='neighbors'>0</strong></div>
+</div>
+<div class='legend'>
+<div class='legend-item'><span class='legend-color' style='background:#999;'></span>Inactive</div>
+<div class='legend-item'><span class='legend-color' style='background:#FF9800;'></span>Neighbor</div>
+<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>Selected</div>
+<div class='legend-item'><span class='legend-color' style='background:#FF5722;'></span>Selected edge</div>
+<div class='legend-item'><span class='legend-color' style='background:#4CAF50;'></span>MST edge</div>
+</div>
+</div>
+<div><svg id='graph' width='1100' height='700'></svg></div>
+</div>
+<script>
+const data=[{"id":"V1"},{"id":"V2"},{"id":"V3"},{"id":"V4"},{"id":"V5"},{"id":"V6"},{"id":"V7"},{"id":"V8"},{"id":"V9"},{"id":"V10"},{"id":"V11"},{"id":"V12"},{"id":"V13"},{"id":"V14"},{"id":"V15"},{"id":"V16"},{"id":"V17"},{"id":"V18"},{"id":"V19"},{"id":"V20"},{"id":"V21"},{"id":"V22"},{"id":"V23"},{"id":"V24"},{"id":"V25"}];
+const links=[{"source":"V1","target":"V2","weight":2.0886351673526073},{"source":"V2","target":"V3","weight":3.7359457110731906},{"source":"V3","target":"V4","weight":8.242791236488374},{"source":"V1","target":"V5","weight":4.975514748400264},{"source":"V2","target":"V6","weight":6.854213906892097},{"source":"V2","target":"V7","weight":4.19208131472441},{"source":"V3","target":"V8","weight":2.0025556747275153},{"source":"V3","target":"V9","weight":2.018619159212501},{"source":"V9","target":"V10","weight":4.2463463545623945},{"source":"V9","target":"V11","weight":9.599048383793974},{"source":"V9","target":"V12","weight":0.5570049105145003},{"source":"V11","target":"V13","weight":3.7603290678602166},{"source":"V6","target":"V14","weight":8.38344001882989},{"source":"V6","target":"V15","weight":0.36222327609045313},{"source":"V6","target":"V16","weight":8.010155400238695},{"source":"V12","target":"V17","weight":8.976617774045891},{"source":"V2","target":"V18","weight":5.674896696711983},{"source":"V6","target":"V19","weight":5.678817173621429},{"source":"V4","target":"V20","weight":4.798078048750147},{"source":"V9","target":"V21","weight":5.10135451012361},{"source":"V20","target":"V22","weight":0.5410270977482279},{"source":"V8","target":"V23","weight":9.476342314422986},{"source":"V14","target":"V24","weight":1.5042462634467246},{"source":"V9","target":"V25","weight":6.922208287454024},{"source":"V22","target":"V8","weight":6.263078257458157},{"source":"V19","target":"V23","weight":5.416370382809715},{"source":"V21","target":"V14","weight":4.617101225864276},{"source":"V8","target":"V19","weight":8.8306354093302},{"source":"V17","target":"V23","weight":1.322006018904359},{"source":"V23","target":"V5","weight":4.443711704331831},{"source":"V4","target":"V9","weight":4.189291043061484},{"source":"V13","target":"V19","weight":8.336358564774661},{"source":"V12","target":"V23","weight":7.979605785120474},{"source":"V1","target":"V6","weight":5.890315054887794},{"source":"V15","target":"V19","weight":1.7164558353649026},{"source":"V14","target":"V11","weight":6.104269616099028},{"source":"V25","target":"V23","weight":2.441882002650577},{"source":"V6","target":"V10","weight":3.927011048409762},{"source":"V2","target":"V16","weight":7.8889933365500635},{"source":"V15","target":"V23","weight":3.5015731801723327},{"source":"V16","target":"V4","weight":3.7857572660393677},{"source":"V14","target":"V18","weight":1.2533560039355158},{"source":"V3","target":"V21","weight":1.9975117507358933},{"source":"V1","target":"V3","weight":2.772848624609661},{"source":"V24","target":"V6","weight":1.5761935203337694},{"source":"V21","target":"V7","weight":5.456324997715949},{"source":"V1","target":"V11","weight":2.345700568824206},{"source":"V6","target":"V21","weight":3.86161674019316},{"source":"V13","target":"V1","weight":3.2558335596291026},{"source":"V15","target":"V3","weight":6.530605997593588},{"source":"V4","target":"V21","weight":8.486466415459295},{"source":"V4","target":"V12","weight":3.1799145512084266},{"source":"V4","target":"V6","weight":6.753022623959015},{"source":"V5","target":"V25","weight":7.298174811653406},{"source":"V23","target":"V16","weight":4.496862360810976},{"source":"V24","target":"V25","weight":5.643046184382043},{"source":"V15","target":"V7","weight":1.5778579784481028},{"source":"V1","target":"V8","weight":2.953681734966119},{"source":"V24","target":"V16","weight":4.5696563418121405},{"source":"V17","target":"V21","weight":4.396393667063071},{"source":"V18","target":"V7","weight":3.4236694505270227},{"source":"V3","target":"V20","weight":1.1148587498648306},{"source":"V21","target":"V10","weight":5.8087752452647425},{"source":"V2","target":"V14","weight":4.722077335821563},{"source":"V4","target":"V15","weight":5.9167619500644415},{"source":"V9","target":"V19","weight":6.4273388217760035},{"source":"V3","target":"V22","weight":8.662905753955624},{"source":"V13","target":"V12","weight":3.6897696387173684},{"source":"V15","target":"V1","weight":4.614684480098356},{"source":"V5","target":"V3","weight":4.769567503907918},{"source":"V5","target":"V9","weight":9.238604981024455},{"source":"V17","target":"V19","weight":5.520162714316269},{"source":"V19","target":"V10","weight":7.646322052224593},{"source":"V11","target":"V3","weight":9.060138148222352},{"source":"V23","target":"V14","weight":2.2108211717867294}];
+const mstEdges=new Set(["V21-V6","V3-V9","V3-V21","V3-V8","V3-V20","V6-V15","V19-V15","V6-V10","V23-V17","V18-V14","V25-V23","V23-V5","V1-V11","V21-V3","V23-V14","V14-V18","V1-V13","V9-V3","V7-V15","V17-V23","V3-V1","V15-V7","V11-V1","V24-V14","V13-V1","V1-V2","V1-V3","V22-V20","V15-V19","V15-V6","V20-V3","V14-V24","V14-V23","V6-V24","V6-V21","V5-V23","V24-V6","V23-V25","V10-V6","V12-V9","V9-V12","V20-V22","V4-V12","V16-V4","V12-V4","V8-V3","V2-V1","V4-V16"]);
+const adj={};
+data.forEach(n=>adj[n.id]=[]);
+links.forEach(l=>{adj[l.source].push(l.target);adj[l.target].push(l.source);});
+const w=1100,h=700;
+const svg=d3.select('#graph');
+const g=svg.append('g');
+const zoom=d3.zoom().scaleExtent([0.3,3]).on('zoom',e=>g.attr('transform',e.transform));
+svg.call(zoom);
+const sim=d3.forceSimulation(data).force('link',d3.forceLink(links).id(d=>d.id).distance(100))
+.force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(w/2,h/2))
+.force('collision',d3.forceCollide().radius(25));
+const link=g.append('g').attr('class','links').selectAll('line').data(links).enter().append('line');
+link.each(function(d){const isMST=mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id);d3.select(this).classed('mst',isMST);});
+const weights=g.append('g').selectAll('text').data(links).enter().append('text')
+.attr('class','weight-label').attr('text-anchor','middle').attr('dy',4)
+.text(d=>d.weight.toFixed(1));
+const node=g.append('g').attr('class','nodes').selectAll('g').data(data).enter().append('g')
+.call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+.on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();if(!showingMST)filter(d.id);});
+node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id);
+sim.on('tick',()=>{
+link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+weights.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2);
+node.attr('transform',d=>`translate(${d.x},${d.y})`);
+});
+let sel=null,wv=true,showingMST=false;
+function filter(v){
+sel=v;
+const neighbors=new Set(adj[v]);
+link.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v)).classed('filtered',d=>(d.source.id===v||d.target.id===v)).classed('mst',false);
+node.select('circle').classed('highlighted',d=>d.id===v).classed('neighbor',d=>neighbors.has(d.id)&&d.id!==v).classed('inactive',d=>!neighbors.has(d.id)&&d.id!==v);
+node.select('text').classed('hidden',false);
+if(wv){weights.classed('hidden',d=>(d.source.id!==v&&d.target.id!==v));}
+document.querySelectorAll('.vertex-item').forEach(i=>i.classList.toggle('selected',i.dataset.v===v));
+document.getElementById('neighbors').textContent=neighbors.size;
+}
+function reset(){
+sel=null;showingMST=false;
+link.classed('hidden',false).classed('mst',d=>mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)).classed('filtered',false);
+node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
+node.select('text').classed('hidden',false);
+if(wv){weights.classed('hidden',false);}
+document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
+document.getElementById('neighbors').textContent=0;
+}
+function showMST(){
+showingMST=!showingMST;sel=null;
+if(showingMST){
+node.select('circle').classed('highlighted',false).classed('neighbor',false).classed('inactive',false);
+node.select('text').classed('hidden',false);
+link.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id))).classed('mst',true).classed('filtered',false);
+if(wv){weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
+document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
+}
+else{reset();}
+}
+function toggleWeights(){
+wv=!wv;
+if(!wv){weights.classed('hidden',true);}
+else if(sel){
+weights.classed('hidden',d=>(d.source.id!==sel&&d.target.id!==sel));}
+else if(showingMST){
+weights.classed('hidden',d=>!(mstEdges.has(d.source.id+'-'+d.target.id)||mstEdges.has(d.target.id+'-'+d.source.id)));}
+else{weights.classed('hidden',false);}}
+function search(){
+const q=document.getElementById('search').value.toLowerCase();
+document.querySelectorAll('.vertex-item').forEach(i=>i.style.display=i.textContent.toLowerCase().includes(q)?'block':'none');
+}
+const list=document.getElementById('list');
+data.sort((a,b)=>a.id.localeCompare(b.id)).forEach(n=>{
+const deg=adj[n.id].length;
+const item=document.createElement('div');
+item.className='vertex-item';item.dataset.v=n.id;
+item.innerHTML=`${n.id} <span class='degree'>${deg}</span>`;
+item.onclick=()=>{if(!showingMST)filter(n.id);};
+list.appendChild(item);
+});
+</script>
+</div>
+</body>
+</html>

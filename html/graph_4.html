@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+<title>Graph 4</title>
+<script src='https://d3js.org/d3.v7.min.js'></script>
+<style>
+body{font-family:Arial;margin:0;padding:20px;background:#f5f5f5}
+.container{max-width:1600px;margin:0 auto;background:white;padding:20px;border-radius:10px}
+h1{color:#333;margin:0 0 10px 0}
+.layout{display:grid;grid-template-columns:250px 1fr;gap:20px}
+.sidebar{background:#f8f9fa;padding:15px;border-radius:8px;max-height:700px;overflow-y:auto}
+.info{background:#e3f2fd;padding:15px;border-radius:5px;margin-bottom:15px;font-size:14px}
+.controls{margin-bottom:15px}
+button{background:#2196F3;color:white;border:none;padding:8px 15px;margin:3px;border-radius:5px;cursor:pointer;font-size:13px;width:100%}
+button:hover{background:#1976D2}
+button.reset{background:#FF5722}
+.vertex-list{margin-top:15px}
+.vertex-item{background:white;padding:10px;margin:5px 0;border-radius:5px;cursor:pointer;border:2px solid transparent;font-size:13px}
+.vertex-item:hover{border-color:#2196F3;background:#e3f2fd}
+.vertex-item.selected{background:#4CAF50;color:white;border-color:#4CAF50}
+.vertex-item .degree{float:right;color:#999;font-size:11px}
+.vertex-item.selected .degree{color:white}
+.search-box{width:100%;padding:8px;margin-bottom:10px;border:1px solid #ddd;border-radius:5px;box-sizing:border-box}
+#graph{border:1px solid #ddd;background:white;border-radius:5px}
+.links line{stroke:#999;stroke-opacity:0.6;stroke-width:1.5px}
+.links line.hidden{display:none}
+.links line.highlighted{stroke:#FF5722;stroke-width:3px;stroke-opacity:1}
+.nodes circle{stroke:#fff;stroke-width:2px;fill:#2196F3;cursor:pointer}
+.nodes circle.hidden{display:none}
+.nodes circle.highlighted{fill:#4CAF50;r:18;stroke-width:3px}
+.nodes circle.neighbor{fill:#FF9800}
+.nodes text{font-size:11px;font-weight:bold;fill:white;pointer-events:none}
+.nodes text.hidden{display:none}
+.weight-label{fill:#1565C0;font-size:11px;font-weight:bold;pointer-events:none}
+.weight-label.hidden{display:none}
+.stats{margin-top:15px;padding:10px;background:#fff3e0;border-radius:5px;font-size:12px}
+.stats div{margin:5px 0}
+</style>
+</head>
+<body>
+<div class='container'>
+<h1>Graph 4</h1>
+<div class='layout'>
+<div class='sidebar'>
+<div class='info'>
+Vertices: 20<br>Edges: 60<br>Avg Degree: 6,0
+</div>
+<div class='controls'>
+<button class='reset' onclick='reset()'>Show All</button>
+<button onclick='toggleWeights()'>Toggle Weights</button>
+</div>
+<input type='text' class='search-box' id='search' placeholder='Search...' onkeyup='search()'>
+<div class='vertex-list' id='list'></div>
+<div class='stats' id='stats'>
+<div>Showing: <strong id='count'>20</strong> vertices</div>
+<div>Selected neighbors: <strong id='neighbors'>0</strong></div>
+</div>
+</div>
+<div><svg id='graph' width='1100' height='700'></svg></div>
+</div>
+<script>
+const data=[{"id":"V1"},{"id":"V2"},{"id":"V3"},{"id":"V4"},{"id":"V5"},{"id":"V6"},{"id":"V7"},{"id":"V8"},{"id":"V9"},{"id":"V10"},{"id":"V11"},{"id":"V12"},{"id":"V13"},{"id":"V14"},{"id":"V15"},{"id":"V16"},{"id":"V17"},{"id":"V18"},{"id":"V19"},{"id":"V20"}];
+const links=[{"source":"V1","target":"V2","weight":9.926087298034773},{"source":"V1","target":"V3","weight":7.021834711628721},{"source":"V1","target":"V4","weight":1.6188338042211836},{"source":"V3","target":"V5","weight":8.11522527852585},{"source":"V5","target":"V6","weight":5.257228303572413},{"source":"V4","target":"V7","weight":1.2285922120504489},{"source":"V2","target":"V8","weight":7.273737494531051},{"source":"V2","target":"V9","weight":2.5688627799316164},{"source":"V1","target":"V10","weight":7.138908466474505},{"source":"V6","target":"V11","weight":1.480578691655141},{"source":"V9","target":"V12","weight":0.6491876624790105},{"source":"V1","target":"V13","weight":4.893174800983374},{"source":"V2","target":"V14","weight":8.314983550522282},{"source":"V3","target":"V15","weight":9.000795838226164},{"source":"V9","target":"V16","weight":3.747219009877191},{"source":"V12","target":"V17","weight":9.570143364804968},{"source":"V6","target":"V18","weight":4.272360368957708},{"source":"V14","target":"V19","weight":0.6259964880008195},{"source":"V6","target":"V20","weight":5.588646843715982},{"source":"V3","target":"V18","weight":5.039310191948234},{"source":"V9","target":"V14","weight":8.30841917202268},{"source":"V14","target":"V4","weight":4.441697658917352},{"source":"V11","target":"V14","weight":1.3954760034581146},{"source":"V18","target":"V19","weight":9.229494502888084},{"source":"V4","target":"V18","weight":7.389555864227029},{"source":"V8","target":"V4","weight":4.260788367192236},{"source":"V11","target":"V17","weight":6.590336661895619},{"source":"V8","target":"V5","weight":5.648398000535895},{"source":"V11","target":"V18","weight":8.044376689465434},{"source":"V1","target":"V11","weight":1.5055092973770177},{"source":"V8","target":"V17","weight":7.095468002718688},{"source":"V15","target":"V5","weight":1.4107779385297627},{"source":"V3","target":"V10","weight":7.657308568948073},{"source":"V8","target":"V14","weight":5.469400919011531},{"source":"V9","target":"V13","weight":7.819504231396257},{"source":"V14","target":"V20","weight":1.1472552808218912},{"source":"V10","target":"V16","weight":4.9223882259981915},{"source":"V18","target":"V1","weight":8.130218501372221},{"source":"V17","target":"V5","weight":8.984455147884583},{"source":"V3","target":"V11","weight":7.301732663758395},{"source":"V13","target":"V6","weight":5.902941645976163},{"source":"V10","target":"V7","weight":4.276535648353811},{"source":"V19","target":"V8","weight":2.7282391697526474},{"source":"V20","target":"V11","weight":7.64769954592583},{"source":"V13","target":"V10","weight":5.336717858798498},{"source":"V11","target":"V2","weight":3.5295828726015808},{"source":"V17","target":"V7","weight":7.550188075440943},{"source":"V12","target":"V6","weight":1.3436536864096675},{"source":"V18","target":"V8","weight":7.55233672347622},{"source":"V7","target":"V19","weight":3.1450723649724877},{"source":"V16","target":"V8","weight":6.534384383646629},{"source":"V11","target":"V13","weight":4.466724045344995},{"source":"V4","target":"V17","weight":8.51771393176379},{"source":"V19","target":"V12","weight":3.148806563867769},{"source":"V7","target":"V12","weight":3.861897030639909},{"source":"V4","target":"V20","weight":7.289604038856113},{"source":"V19","target":"V9","weight":4.657096509455496},{"source":"V12","target":"V16","weight":1.1421027559792265},{"source":"V19","target":"V20","weight":5.05666986604422},{"source":"V20","target":"V16","weight":4.957727885259132}];
+const adj={};
+data.forEach(n=>adj[n.id]=[]);
+links.forEach(l=>{adj[l.source].push(l.target);adj[l.target].push(l.source);});
+const w=1100,h=700;
+const svg=d3.select('#graph');
+const g=svg.append('g');
+const zoom=d3.zoom().scaleExtent([0.3,3]).on('zoom',e=>g.attr('transform',e.transform));
+svg.call(zoom);
+const sim=d3.forceSimulation(data).force('link',d3.forceLink(links).id(d=>d.id).distance(100))
+.force('charge',d3.forceManyBody().strength(-200)).force('center',d3.forceCenter(w/2,h/2))
+.force('collision',d3.forceCollide().radius(25));
+const link=g.append('g').attr('class','links').selectAll('line').data(links).enter().append('line');
+const weights=g.append('g').selectAll('text').data(links).enter().append('text')
+.attr('class','weight-label').attr('text-anchor','middle').attr('dy',4)
+.text(d=>d.weight.toFixed(1));
+const node=g.append('g').attr('class','nodes').selectAll('g').data(data).enter().append('g')
+.call(d3.drag().on('start',(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+.on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y;}).on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}));
+node.append('circle').attr('r',14).on('click',(e,d)=>{e.stopPropagation();filter(d.id);});
+node.append('text').attr('text-anchor','middle').attr('dy',4).text(d=>d.id.replace('V',''));
+sim.on('tick',()=>{
+link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+weights.attr('x',d=>(d.source.x+d.target.x)/2).attr('y',d=>(d.source.y+d.target.y)/2);
+node.attr('transform',d=>`translate(${d.x},${d.y})`);
+});
+let sel=null,wv=true;
+function filter(v){
+sel=v;
+const n=new Set(adj[v]);
+n.add(v);
+node.select('circle').classed('hidden',d=>!n.has(d.id)).classed('highlighted',d=>d.id===v)
+.classed('neighbor',d=>d.id!==v&&n.has(d.id));
+node.select('text').classed('hidden',d=>!n.has(d.id));
+link.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id))
+.classed('highlighted',d=>d.source.id===v||d.target.id===v);
+if(wv){weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
+document.querySelectorAll('.vertex-item').forEach(i=>i.classList.toggle('selected',i.dataset.v===v));
+document.getElementById('count').textContent=n.size;
+document.getElementById('neighbors').textContent=n.size-1;
+}
+function reset(){
+sel=null;
+node.select('circle').classed('hidden',false).classed('highlighted',false).classed('neighbor',false);
+node.select('text').classed('hidden',false);
+link.classed('hidden',false).classed('highlighted',false);
+if(wv){weights.classed('hidden',false);}
+document.querySelectorAll('.vertex-item').forEach(i=>i.classList.remove('selected'));
+document.getElementById('count').textContent=data.length;
+document.getElementById('neighbors').textContent=0;
+}
+function toggleWeights(){
+wv=!wv;
+if(!wv){weights.classed('hidden',true);}
+else if(sel){
+const n=new Set(adj[sel]);
+n.add(sel);
+weights.classed('hidden',d=>!n.has(d.source.id)||!n.has(d.target.id));}
+else{weights.classed('hidden',false);}}
+function search(){
+const q=document.getElementById('search').value.toLowerCase();
+document.querySelectorAll('.vertex-item').forEach(i=>i.style.display=i.textContent.toLowerCase().includes(q)?'block':'none');
+}
+const list=document.getElementById('list');
+data.sort((a,b)=>parseInt(a.id.replace('V',''))-parseInt(b.id.replace('V',''))).forEach(n=>{
+const deg=adj[n.id].length;
+const item=document.createElement('div');
+item.className='vertex-item';item.dataset.v=n.id;
+item.innerHTML=`${n.id} <span class='degree'>${deg}</span>`;
+item.onclick=()=>filter(n.id);
+list.appendChild(item);
+});
+</script>
+</div>
+</body>
+</html>

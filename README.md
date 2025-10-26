@@ -22,11 +22,15 @@ The goal is to connect all districts with the minimum total cost while ensuring 
 - Uses an indexed minimum priority queue
 - Starts from vertex 0 and grows the MST one edge at a time
 - Always picks the minimum weight edge that connects a tree vertex to a non-tree vertex
+- **Time Complexity:** O((V + E) log V)
+- **Space Complexity:** O(V)
 
 ### Kruskal's Algorithm
 - Sorts all edges by weight first
 - Uses Union-Find data structure to detect cycles
 - Adds edges in order if they don't create a cycle
+- **Time Complexity:** O(E log E) for sorting + O(E α(V)) for Union-Find
+- **Space Complexity:** O(V + E)
 
 ### Both implementations track:
 - Number of operations performed
@@ -37,18 +41,24 @@ The goal is to connect all districts with the minimum total cost while ensuring 
 
 I created 28 test graphs with increasing complexity:
 
-| Category | Vertices | Edges | Graphs | Notes |
-|----------|----------|-------|--------|-------|
-| Small | 5-25 | 10-75 | 5 | Quick sanity checks |
-| Medium | 30-300 | 90-900 | 10 | Typical city networks |
-| Large | 350-1000 | 1400-4000 | 10 | Big cities |
-| Extra Large | 1300-2000 | 5200-8000 | 3 | Stress testing |
+| Category | Vertices | Edges | Graphs |
+|----------|----------|-------|--------|
+| Small | 5-25 | 10-75 | 5 | 
+| Medium | 30-300 | 90-900 | 10 | 
+| Large | 350-1000 | 1400-4000 | 10 | 
+| Extra Large | 1300-2000 | 5200-8000 | 3 | 
 
-All graphs have an edge-to-vertex ratio between 2 and 4, which represents realistic sparse networks (you don't need roads between every pair of districts).
+All graphs are:
+- **Connected** (every vertex reachable from every other)
+- **Weighted** (edge weights randomly distributed between 0.1 and 10.0)
+- **Sparse** (E ≈ 2-4V, typical for road networks)
 
 ## Results
 ![img.png](data/img.png)
 ![img.png](data/img2.png)
+**Key Observation:** Both algorithms always produced identical MST weights, confirming correctness.
+
+
 ### Performance Summary
 
 After running both algorithms on all 28 graphs:
@@ -59,7 +69,6 @@ After running both algorithms on all 28 graphs:
 | Kruskal | 2.56 ms | 0.08 ms | 15.58 ms |
 
 Prim won on 24 out of 28 graphs (85.7%). Kruskal was only faster on 4 very small graphs. The performance gap gets wider as graphs get larger. On the biggest graph, Kruskal took 7.35x longer than Prim.
-Here are some data points:
 
 
 ## Analysis
@@ -93,8 +102,26 @@ This is where the performance gap really widened. On the three largest graphs:
 
 The sorting overhead in Kruskal really dominates at this scale. Even though Kruskal's Union-Find operations are fast, it can't overcome the cost of sorting 8000 edges.
 
+### Operation Count Analysis
+
+Interestingly, **Kruskal typically performs fewer total operations** than Prim:
+- Graph 28: Kruskal 36,003 ops vs Prim 180,001 ops
+
+However, this doesn't translate to faster execution because:
+1. **Not all operations are equal:** Kruskal's sorting operation is far more expensive than Prim's heap operations
+2. **The operation count excludes sorting:** Kruskal's reported operations only include Union-Find, not the O(E log E) sort
+
+**Conclusion:** Operation count alone is not a reliable predictor of real-world performance. The nature and cost of operations matter more than their quantity.
+
 ## Conclusions
 
+| Criteria | Better Algorithm |
+|-----------|------------------|
+| Small sparse graphs | Kruskal |
+| Large dense networks | **Prim** |
+| Scalability | **Prim** |
+| Consistent performance | **Prim** |
+| Memory efficiency | Kruskal |
 
 **Prim's algorithm is the better choice** because:
 - Faster on 85% of test cases
@@ -110,12 +137,39 @@ The theoretical analysis matches practice. Both algorithms are O(E log) for spar
 
 If I were actually building a tool for city planners, I'd implement Prim's algorithm for the main use case, with Kruskal as a fallback option for specific scenarios.
 
-Output files are saved to `data/`:
+## BONUS: Graph Visualization
+
+I implemented a graph visualizer that generates visual representations of all 28  graphs.
+
+### Features
+
+**Two visualization formats:**
+- **HTML** - D3.js-based interactive visualizations with filtering
+- **PNG** - Static images
+
+**Interactive controls:**
+- Highlight MST with the button
+- Click any vertex to filter and show only its neighbors
+- Toggle edge weights visibility
+- Search for specific vertices
+- Drag vertices to rearrange layout
+- Zoom and pan controls
+
+### Why Interactive Visualization?
+
+Graphs with 100+ vertices become unreadable as static images. The interactive HTML version solves this by allowing vertex-by-vertex exploration. When you select a vertex, only that vertex and its immediate neighbors are shown, making even graphs with 2000 vertices comprehensible.
+
+## Output Files
+Output files are saved to `data/` and `graphs/`:
 - `input.json` - input graphs
 - `output.json` - MST results
 - `output.csv` - performance metrics
+- `png` - static visualizations
+- `html` -  interactive visualizations
+- `html/index.html` - main page
 
 ## References
 
 - Algorithms, 4th Edition (Sedgewick & Wayne) - Chapters 1.5 and 4.3
 - Introduction to Algorithms - Chapter 21
+
