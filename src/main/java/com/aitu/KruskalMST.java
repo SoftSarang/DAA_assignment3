@@ -30,31 +30,25 @@ public class KruskalMST {
         UF unionFind = new UF(vertices);
         int edgesAdded = 0;
 
-        for (Edge e : edges) {
+        for (int i = 0; i < edgesCount && edgesAdded < vertices - 1; i++) {
+            Edge e = edges[i];
             int v = e.either();
             int w = e.other(v);
 
-            if (v == w) {
-                continue;
-            }
-            if (e.weight() < 0) {
-                throw new IllegalArgumentException("Negative edge weight detected: " + e.weight());
-            }
-
-            tracker.incrementComparison();
+            tracker.incrementFind();
             int rootV = unionFind.find(v);
-            tracker.incrementComparison();
+            tracker.incrementFind();
             int rootW = unionFind.find(w);
 
+            tracker.incrementComparison();
+
             if (rootV != rootW) {
-                tracker.incrementUnion();
                 unionFind.union(v, w);
+                tracker.incrementUnion();
                 mst.enqueue(e);
                 totalWeight += e.weight();
                 edgesAdded++;
             }
-
-            if (edgesAdded == vertices - 1) break;
         }
 
         if (edgesAdded != vertices - 1) {

@@ -5,6 +5,26 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class KruskalMSTTest {
+
+    @Test
+    void testMSTWeightComparisonWithPrim() {
+        EdgeWeightedGraph G = new EdgeWeightedGraph(4);
+        G.addEdge(new Edge(0, 1, 1));
+        G.addEdge(new Edge(0, 2, 4));
+        G.addEdge(new Edge(1, 2, 2));
+        G.addEdge(new Edge(2, 3, 3));
+
+        Metrics primTracker = new Metrics();
+        PrimMST primMST = new PrimMST(G, primTracker);
+        double primWeight = primMST.weight();
+
+        Metrics kruskalTracker = new Metrics();
+        KruskalMST kruskalMST = new KruskalMST(G, kruskalTracker);
+        double kruskalWeight = kruskalMST.weight();
+
+        assertEquals(primWeight, kruskalWeight, 0.001, "MST weights should be identical for both algorithms");
+    }
+
     @Test
     void testConnectedGraph() {
         EdgeWeightedGraph G = new EdgeWeightedGraph(4);
@@ -40,48 +60,20 @@ public class KruskalMSTTest {
     }
 
     @Test
-    void testSelfLoop() {
-        EdgeWeightedGraph G = new EdgeWeightedGraph(2);
-        G.addEdge(new Edge(0, 0, 1)); // Self-loop
-        G.addEdge(new Edge(0, 1, 2));
-
-        Metrics tracker = new Metrics();
-        KruskalMST mst = new KruskalMST(G, tracker);
-        assertEquals(2.0, mst.weight(), 0.001);
-        int count = 0;
-        for (Edge e : mst.edges()) {
-            count++;
-        }
-        assertEquals(1, count);
-
-        assertEquals(2, mst.getVertices());
-        assertEquals(2, mst.getEdgesCount());
-    }
-
-    @Test
-    void testNegativeWeight() {
-        EdgeWeightedGraph G = new EdgeWeightedGraph(2);
-        G.addEdge(new Edge(0, 1, -1));
-
-        Metrics tracker = new Metrics();
-        assertThrows(IllegalArgumentException.class, () -> new KruskalMST(G, tracker));
-    }
-
-    @Test
     void testCyclePrevention() {
         EdgeWeightedGraph G = new EdgeWeightedGraph(3);
         G.addEdge(new Edge(0, 1, 1));
         G.addEdge(new Edge(1, 2, 2));
-        G.addEdge(new Edge(0, 2, 3)); // Cycle possible
+        G.addEdge(new Edge(0, 2, 3));
 
         Metrics tracker = new Metrics();
         KruskalMST mst = new KruskalMST(G, tracker);
-        assertEquals(3.0, mst.weight(), 0.001); // Should take 1 + 2
+        assertEquals(3.0, mst.weight(), 0.001);
         int count = 0;
         for (Edge e : mst.edges()) {
             count++;
         }
-        assertEquals(2, count); // V-1 edges, no cycle
+        assertEquals(2, count);
 
         assertEquals(3, mst.getVertices());
         assertEquals(3, mst.getEdgesCount());

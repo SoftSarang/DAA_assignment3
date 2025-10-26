@@ -8,6 +8,7 @@ public class Metrics {
     private long comparisons = 0;
     private long unions = 0;
     private long pqOperations = 0;
+    private long findOperations = 0;
     private long startTime;
     private double executionTimeMs = 0.0;
 
@@ -32,6 +33,10 @@ public class Metrics {
         pqOperations++;
     }
 
+    public void incrementFind() {
+        findOperations++;
+    }
+
     public long getComparisons() {
         return comparisons;
     }
@@ -44,8 +49,12 @@ public class Metrics {
         return pqOperations;
     }
 
+    public long getFindOperations() {
+        return findOperations;
+    }
+
     public long getTotalOperations() {
-        return comparisons + unions + pqOperations;
+        return comparisons + unions + pqOperations + findOperations;
     }
 
     public double getExecutionTimeMs() {
@@ -57,22 +66,16 @@ public class Metrics {
         unions = 0;
         pqOperations = 0;
         executionTimeMs = 0.0;
-    }
-
-    @Override
-    public String toString() {
-        return "Metrics{comparisons=" + comparisons + ", unions=" + unions +
-                ", pqOperations=" + pqOperations + ", totalOps=" + getTotalOperations() +
-                ", timeMs=" + executionTimeMs + "}";
+        findOperations = 0;
     }
 
     public static void writeCsv(String filePath, String[][] data, boolean append) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, append))) {
             if (!append) {
-                writer.write("graph_id,vertices,edges,algorithm,total_cost,operations_count,execution_time_ms\n");
+                writer.write("graph_id;vertices;edges;algorithm;total_cost;operations_count;execution_time_ms\n");
             }
             for (String[] row : data) {
-                writer.write(String.join(",", row) + "\n");
+                writer.write(String.join(";", row) + "\n");
             }
         }
     }
