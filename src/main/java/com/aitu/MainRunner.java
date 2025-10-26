@@ -13,12 +13,6 @@ public class MainRunner {
     public static void main(String[] args) {
         try {
             warmupJVM();
-            System.gc();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
 
             JSONObject input = readInputJson();
             JSONArray graphs = input.getJSONArray("graphs");
