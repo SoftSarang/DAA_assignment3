@@ -24,7 +24,7 @@ public class InputJsonGenerator {
         return labels;
     }
 
-    private JSONObject generateRandomGraph(int id, int nodeCount, double density) {
+    private JSONObject generateRandomGraph(int id, int nodeCount, int edgesPerVertex) {
         JSONArray edges = new JSONArray();
         String[] nodes = generateNodeLabels(nodeCount);
         boolean[][] edgeMatrix = new boolean[nodeCount][nodeCount];
@@ -41,13 +41,13 @@ public class InputJsonGenerator {
         }
 
         int maxPossibleEdges = nodeCount * (nodeCount - 1) / 2;
-        int maxEdges = Math.min(maxPossibleEdges, (int) (maxPossibleEdges * density));
+        int totalEdges = Math.min(nodeCount * edgesPerVertex, maxPossibleEdges);
 
-        while (edges.length() < maxEdges) {
+        while (edges.length() < totalEdges) {
             int u = random.nextInt(nodeCount);
             int v = random.nextInt(nodeCount);
             if (u != v && !edgeMatrix[u][v]) {
-                double weight = random.nextDouble() * 10;
+                double weight = 1 + random.nextDouble() * 9;
                 edges.put(new JSONObject()
                         .put("from", nodes[u])
                         .put("to", nodes[v])
@@ -68,22 +68,22 @@ public class InputJsonGenerator {
 
         int[] smallNodes = {5, 10, 15, 20, 25};
         for (int nodes : smallNodes) {
-            graphs.put(generateRandomGraph(idCounter++, nodes, 0.3));
+            graphs.put(generateRandomGraph(idCounter++, nodes, 3));
         }
 
         int[] mediumNodes = {30, 60, 90, 120, 150, 180, 210, 240, 270, 300};
         for (int nodes : mediumNodes) {
-            graphs.put(generateRandomGraph(idCounter++, nodes, 0.1));
+            graphs.put(generateRandomGraph(idCounter++, nodes, 3));
         }
 
         int[] largeNodes = {350, 400, 500, 600, 700, 800, 850, 900, 950, 1000};
         for (int nodes : largeNodes) {
-            graphs.put(generateRandomGraph(idCounter++, nodes, 0.02));
+            graphs.put(generateRandomGraph(idCounter++, nodes, 4));
         }
 
         int[] extraLargeNodes = {1300, 1600, 2000};
         for (int nodes : extraLargeNodes) {
-            graphs.put(generateRandomGraph(idCounter++, nodes, 0.005));
+            graphs.put(generateRandomGraph(idCounter++, nodes, 4));
         }
 
         JSONObject output = new JSONObject();
